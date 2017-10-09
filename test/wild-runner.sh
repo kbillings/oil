@@ -7,13 +7,11 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+source test/common.sh
+
 #
 # Helpers
 # 
-
-log() {
-  echo "$@" 1>&2
-}
 
 # Default abbrev-text format
 osh-parse() {
@@ -209,6 +207,31 @@ EOF
 </body>
 </html>
 EOF
+}
+
+# TODO: Modify this  to work with wild.
+_all-parallel() {
+  mkdir -p _tmp/wild
+
+  # wild.sh
+  write-all-manifests
+  # TODO: Write manifest.txt?
+  # Everything is single-threaded except the top level?  OK fine.
+
+  # NOTE: For spec tests, they get HTML for free here.  We need to make our
+  # own HTML for each project.
+  # And then a summary for all projects.
+
+  head -n $NUM_TASKS _tmp/wild/MANIFEST.txt \
+    | xargs -n 1 -P $JOBS --verbose -- $0 run-cases || true
+
+  #ls -l _tmp/spec
+
+  #all-tests-to-html
+
+  link-css
+
+  html-summary
 }
 
 

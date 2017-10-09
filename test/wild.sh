@@ -109,8 +109,15 @@ write-all-manifests() {
   oil-sketch-manifest > _tmp/wild/oil-sketch.manifest.txt
   oil-manifest > _tmp/wild/oil.manifest.txt
 
-  _manifest aboriginal $ABORIGINAL_DIR \
-    $(find $ABORIGINAL_DIR -name '*.sh' -printf '%P\n')
+  local src
+
+  src=$ABORIGINAL_DIR
+  _manifest aboriginal $src \
+    $(find $src -name '*.sh' -printf '%P\n')
+
+  src=/etc/init.d
+  _manifest initd $src \
+    $(find $src -type f -a -executable -a -printf '%P\n')
 
   wc -l _tmp/wild/*.manifest.txt
 }
