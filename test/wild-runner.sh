@@ -62,11 +62,15 @@ _osh-to-oil-one() {
 }
 
 _parse-and-copy-one() {
-  local src_base=$1
-  local dest_base=$2
-  local rel_path=$3
+  local input=$1
+  local rel_path=$2
+  local dest_base=$3
 
-  local input=$src_base/$rel_path
+  #local src_base=$1
+  #local dest_base=$2
+  #local rel_path=$3
+
+  #local input=$src_base/$rel_path
   local output=$dest_base/$rel_path
 
   if grep -E 'exec wish|exec tclsh' $input; then
@@ -209,6 +213,74 @@ EOF
 EOF
 }
 
+# Table:
+#
+# Underlying text file:
+#
+# rel_path num_bytes -> num_lines, status/time parse, status/time
+# conversion
+#
+# Then in display mode:
+# - link to HTML
+# - link to errors: FAILED.html
+
+parse-project() {
+  local name=$1
+
+  local manifest=_tmp/wild/$name.manifest.txt
+  local out_dir=_tmp/wild/$name
+  mkdir -p $out_dir
+
+  # Truncate files
+  echo -n '' >$out_dir/FAILED.txt
+  echo -n '' >$out_dir/FAILED.html
+
+  while read size abs_path rel_path; do
+    echo
+    echo $size - $abs_path - $rel_path
+    echo
+    _parse-and-copy-one $abs_path $rel_path $out_dir || true
+  done < $manifest
+
+  # TODO:
+  # - run wc -l on each file
+  #   - I guess this can be a separate awk step, for LINE-COUNTS.txt
+  #   - maybe merge them with Awk or Python
+  # - link CSS for the whole project
+  # - FAILED is appended to
+
+  #{ pushd $src_base >/dev/null
+  #  wc -l "$@"
+  #  popd >/dev/null
+  #} > $dest_base/LINE-COUNTS.txt
+
+  ## Don't call it index.html
+  #make-index < $dest_base/LINE-COUNTS.txt > $dest_base/FILES.html
+
+  #_link-or-copy web/osh-to-oil.html $dest_base
+  #_link-or-copy web/osh-to-oil.js $dest_base
+  #_link-or-copy web/osh-to-oil-index.css $dest_base
+
+  ## Truncate files
+  #echo -n '' >$dest_base/FAILED.txt
+  #echo -n '' >$dest_base/FAILED.html
+
+  #local failed=''
+
+  #for f in "$@"; do echo $f; done |
+  #  sort |
+  #  xargs -n 1 -- $0 _parse-and-copy-one $src_base $dest_base ||
+  #  failed=1
+
+  #tree -p $dest_base
+
+  #if test -n "$failed"; then
+  #  log ""
+  #  log "*** Some tasks failed.  See messages above."
+  #fi
+  #echo "Results: file://$PWD/$dest_base"
+}
+
 # TODO: Modify this  to work with wild.
 _all-parallel() {
   mkdir -p _tmp/wild
@@ -223,7 +295,7 @@ _all-parallel() {
   # And then a summary for all projects.
 
   head -n $NUM_TASKS _tmp/wild/MANIFEST.txt \
-    | xargs -n 1 -P $JOBS --verbose -- $0 run-cases || true
+    | xargs -n 1 -P $JOBS --verbose -- $0 parse-project || true
 
   #ls -l _tmp/spec
 

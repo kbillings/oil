@@ -119,6 +119,10 @@ write-all-manifests() {
   _manifest initd $src \
     $(find $src -type f -a -executable -a -printf '%P\n')
 
+  src=~/git/other/dokku
+  _manifest dokku $src \
+    $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
+
   wc -l _tmp/wild/*.manifest.txt
 }
 

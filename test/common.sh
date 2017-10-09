@@ -7,6 +7,10 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# For xargs -P in spec-runner.sh, wild-runner.sh.
+
+readonly JOBS=$(( $(nproc) - 1 ))
+
 log() {
   echo "$@" 1>&2
 }

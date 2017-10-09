@@ -207,8 +207,6 @@ link-css() {
   ln -s -f --verbose $PWD/web/{spec-tests,spec-code}.css _tmp/spec
 }
 
-readonly JOBS=$(( $(nproc) - 1 ))
-
 _all-parallel() {
   mkdir -p _tmp/spec
 
