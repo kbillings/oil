@@ -242,8 +242,60 @@ parse-project() {
     _parse-and-copy-one $abs_path $rel_path $out_dir || true
   done < $manifest
 
+  # _tmp/wild/
+  #   MANIFEST.txt
+  #   dokku.manifest.txt
+  #   dokku/
+  #     dokku.sh.txt  # copy of the script for viewing
+  #     dokku.sh__count.txt  # line count
+
+  #     dokku.sh__parse.html  # AST
+  #     dokku.sh__parse.task.txt
+  #     dokku.sh__parse.stderr.txt
+
+  #     dokku.sh__osh2oil.task.txt
+  #     dokku.sh__osh2oil.stderr.txt
+  #     dokku.sh__osh2oil.code.txt
+  #
+  #     FAILED.html  # links to stderr.txt
+  #   initd/
+  #
+  #   RESULTS.html
+
+  #   dokku.RESULTS.html    # something that can be published
+  #   initd.RESULTS.html    # links to *.stderr.txt and so forth
+  #
+  # files that don't need to be published: *.task.txt, *.count.txt
+  # everything else needs to be published
+  #
+  # 8 files from each file?  I guess that's OK?  Or the line count can be
+  # done by Awk when it's summarizing.  The copy of the script can also be
+  # done by Awk because we have the manifest.  Do it all in a fast batch for
+  # publishing.
+
+  #
+  # Only to HTML AST.  I don't need the text AST.  It doesn't even test
+  # timing?  Well how do I isolate the timing of that?
+  # Then I need Python again?  Or just run another one with
+  # --ast-format=None or something?
+  # Gah.
+  #
   # TODO:
-  # - run wc -l on each file
+  # - run-task-with-status $path.task.txt
+  # 
+  # And then join them how?
+    # path = ( "_tmp/wild/" name "/" rel_path ".task.txt" )
+    # path = ( "_tmp/wild/" name "/" rel_path ".count.txt" )
+    # every individual fiel
+    #
+    # alternative: you could make a Python tool to do batch parsing?
+    # Might be easier.
+    # It can output the timing of the parse
+    # It can count the lines.  All in one tool.
+    # tools/batch_parse.py
+    # But then it doesn't use osh -n and osh2oil?
+
+  # - run wc -l on each file - $ path.count.txt
   #   - I guess this can be a separate awk step, for LINE-COUNTS.txt
   #   - maybe merge them with Awk or Python
   # - link CSS for the whole project
