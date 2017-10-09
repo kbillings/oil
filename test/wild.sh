@@ -79,20 +79,40 @@ this-repo() {
 
 # TODO: Where do we write the base dir?
 oil-sketch-manifest() {
-  local dir=~/git/oil-sketch
-  pushd $dir >/dev/null
+  local base_dir=~/git/oil-sketch
+  pushd $base_dir >/dev/null
   for name in *.sh {awk,demo,make,misc,regex,tools}/*.sh; do
-    echo "$(stat -c '%s' $name)" $dir/$name $name
+    echo "$(stat -c '%s' $name)" $base_dir/$name $name
   done
   popd >/dev/null
 }
 
-this-repo-manifest() {
-  local dir=$PWD
+oil-manifest() {
+  local base_dir=$PWD
   for name in \
     configure install *.sh {benchmarks,build,test,scripts,opy}/*.sh; do
-    echo "$(stat -c '%s' $name)" $dir/$name $name
+    echo "$(stat -c '%s' $name)" $base_dir/$name $name
   done
+}
+
+_manifest() {
+  local name=$1
+  local base_dir=$2
+  shift 2
+
+  for name in "$@"; do
+    echo "$(stat -c '%s' $base_dir/$name)" $base_dir/$name $name
+  done > _tmp/wild/$name.manifest.txt
+}
+
+write-all-manifests() {
+  oil-sketch-manifest > _tmp/wild/oil-sketch.manifest.txt
+  oil-manifest > _tmp/wild/oil.manifest.txt
+
+  _manifest aboriginal $ABORIGINAL_DIR \
+    $(find $ABORIGINAL_DIR -name '*.sh' -printf '%P\n')
+
+  wc -l _tmp/wild/*.manifest.txt
 }
 
 readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
