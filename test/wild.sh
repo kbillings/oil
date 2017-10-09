@@ -14,6 +14,7 @@
 # - Add ability to parse them only
 #   - right now we have 3 actions: test AST, html AST, and osh-to-oil.  This
 #     does a lot of redundant work.
+# - Archive them all into a big tarball?
 #
 # Maybe have an overall overview page?  Like the spec tests?
 # project/
@@ -67,12 +68,31 @@ oil-sketch() {
     $(cd $src && echo *.sh {awk,demo,make,misc,regex,tools}/*.sh)
 }
 
+# just do a for loop for these
 this-repo() {
   local src=$PWD
   _parse-many \
     $src \
     $RESULT_DIR/oil \
     configure install *.sh {benchmarks,build,test,scripts,opy}/*.sh
+}
+
+# TODO: Where do we write the base dir?
+oil-sketch-manifest() {
+  local dir=~/git/oil-sketch
+  pushd $dir >/dev/null
+  for name in *.sh {awk,demo,make,misc,regex,tools}/*.sh; do
+    echo "$(stat -c '%s' $name)" $dir/$name $name
+  done
+  popd >/dev/null
+}
+
+this-repo-manifest() {
+  local dir=$PWD
+  for name in \
+    configure install *.sh {benchmarks,build,test,scripts,opy}/*.sh; do
+    echo "$(stat -c '%s' $name)" $dir/$name $name
+  done
 }
 
 readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
