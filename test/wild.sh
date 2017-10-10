@@ -82,7 +82,7 @@ oil-sketch-manifest() {
   local base_dir=~/git/oil-sketch
   pushd $base_dir >/dev/null
   for name in *.sh {awk,demo,make,misc,regex,tools}/*.sh; do
-    echo "$(stat -c '%s' $name)" $base_dir/$name $name
+    echo oil-sketch $base_dir/$name $name
   done
   popd >/dev/null
 }
@@ -91,7 +91,7 @@ oil-manifest() {
   local base_dir=$PWD
   for name in \
     configure install *.sh {benchmarks,build,test,scripts,opy}/*.sh; do
-    echo "$(stat -c '%s' $name)" $base_dir/$name $name
+    echo oil $base_dir/$name $name
   done
 }
 
@@ -100,8 +100,8 @@ _manifest() {
   local base_dir=$2
   shift 2
 
-  for name in "$@"; do
-    echo "$(stat -c '%s' $base_dir/$name)" $base_dir/$name $name
+  for path in "$@"; do
+    echo $name $base_dir/$path $path
   done > _tmp/wild/$name.manifest.txt
 }
 

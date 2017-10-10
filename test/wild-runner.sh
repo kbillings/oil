@@ -257,9 +257,14 @@ parse-project() {
   #echo -n '' >$out_dir/FAILED.txt
   #echo -n '' >$out_dir/FAILED.html
 
-  while read size abs_path rel_path; do
+  # TODO: It would be better to do this with xargs!
+  # Absolute input then out_prefix?
+  # That's a better format?
+  # Well we also want the project name!
+
+  while read proj abs_path rel_path; do
     echo
-    echo $size - $abs_path - $rel_path
+    echo $proj - $abs_path - $rel_path
     echo
     #_parse-and-copy-one $abs_path $rel_path $out_dir || true
     local output=$out_dir/$rel_path 
@@ -268,9 +273,9 @@ parse-project() {
     osh-html-one $abs_path $output || true
   done < $manifest
 
-  while read size abs_path rel_path; do
+  while read proj abs_path rel_path; do
     echo
-    echo $size - $abs_path - $rel_path
+    echo $proj - $abs_path - $rel_path
     echo
     #_parse-and-copy-one $abs_path $rel_path $out_dir || true
     local output=$out_dir/$rel_path 
