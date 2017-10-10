@@ -428,8 +428,14 @@ _all-parallel() {
 }
 
 summarize-dirs() {
-  find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
-  find _tmp/wild/dokku -name RESULTS.csv
+  #find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
+  #find _tmp/wild/dokku -name RESULTS.csv
+
+  cat _tmp/wild/*.manifest.txt | test/wild_report.py summarize-dirs
+}
+
+make-html() {
+  find _tmp/wild -name RESULTS.csv | test/wild_report.py make-html
 }
 
 
