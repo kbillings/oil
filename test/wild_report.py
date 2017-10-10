@@ -26,7 +26,7 @@ from collections import defaultdict
 #   }
 # }
 
-class Dir:
+class DirNode:
   def __init__(self):
     # filename -> stats for success, failure, time, size, etc.
     self.files = {}  
@@ -44,9 +44,29 @@ class Dir:
 
 # Traverse the root object with the relative path
 # Update it with rows
-def Update(root_dir, rel_path, file_stats):
-  pass
+def UpdateNodes(node, path_parts, file_stats):
+  first = path_parts[0]
+  rest = path_parts[1:]
+  if rest:
+    if first in node.dirs:
+      child = node.dirs[first]
+    else:
+      child = DirNode()
+      node.dirs[first] = child
+      node.dir_totals[first] = {}  # Empty
 
+    sums = node.dir_totals[first]
+    for name, value in file_stats.iteritems():
+      if name in sums:
+        sums[name] += value
+      else:
+        # NOTE: Could be int or float!!!
+        sums[name] = value
+
+    UpdateNodes(child, rest, file_stats)
+  else:
+    # Attach to this dir
+    node.files[first] = file_stats
 
 
 def main(argv):
@@ -84,19 +104,47 @@ def main(argv):
     # I kind of want a table abstraction, which can be CSV or JSON.
     # CSV goes to R, JSON goes to the browser.
 
+    root_node = DirNode()
+
     # Collect work into dirs
     for line in sys.stdin:
       #d = line.strip()
       proj, abs_path, rel_path = line.split()
-      print proj, '-', abs_path, '-', rel_path
+      #print proj, '-', abs_path, '-', rel_path
 
       base_path = os.path.join('_tmp/wild', proj, rel_path)
-      print base_path
+      path_parts = base_path.split('/')[1:]  # get rid of _tmp/
+      print path_parts
+
       d = os.path.dirname(base_path)
       dirs[d].append(base_path)
+
+      file_stats = {}
+
+      # TODO: Open stderr too to get internal time?
+      parse_task_path = base_path + '__parse.task.txt'
+      with open(parse_task_path) as f:
+        try:
+          x, y = f.read().split()
+        except Exception:
+          print >>sys.stderr, 'Error reading %s' % parse_task_path
+          raise
+        file_stats['parse_status'], file_stats['parse_proc_secs'] = x, y
+      
+      osh2oil_task_path = base_path + '__osh2oil.task.txt'
+      with open(osh2oil_task_path) as f:
+        try:
+          x, y = f.read().split()
+        except Exception:
+          print >>sys.stderr, 'Error reading %s' % osh2oil_task_path
+          raise
+        file_stats['osh2oil_status'], file_stats['osh2oil_proc_secs'] = x, y
+
+      print file_stats 
+      UpdateNodes(root_node, path_parts, file_stats)
       continue
 
-    print(dirs)
+    #print(dirs)
 
     if False:
       paths = glob.glob(os.path.join(d, '*' + suffix))

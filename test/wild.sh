@@ -116,6 +116,8 @@ _simple-manifest() {
 }
 
 write-all-manifests() {
+  mkdir -p _tmp/wild
+
   oil-sketch-manifest > _tmp/wild/oil-sketch.manifest.txt
   oil-manifest > _tmp/wild/oil.manifest.txt
 

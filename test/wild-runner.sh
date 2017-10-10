@@ -251,7 +251,6 @@ parse-project() {
 
   local manifest=_tmp/wild/$name.manifest.txt
   local out_dir=_tmp/wild/$name
-  mkdir -p $out_dir
 
   # Truncate files
   #echo -n '' >$out_dir/FAILED.txt
@@ -408,8 +407,6 @@ parse-project() {
 
 # TODO: Modify this  to work with wild.
 _all-parallel() {
-  mkdir -p _tmp/wild
-
   # wild.sh
   write-all-manifests
   # TODO: Write manifest.txt?
@@ -435,7 +432,7 @@ summarize-dirs() {
   #find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
   #find _tmp/wild/dokku -name RESULTS.csv
 
-  cat _tmp/wild/*.manifest.txt | test/wild_report.py summarize-dirs
+  cat _tmp/wild/{dokku,wwwoosh}.manifest.txt | test/wild_report.py summarize-dirs
 }
 
 make-html() {
