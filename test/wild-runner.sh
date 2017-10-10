@@ -217,28 +217,6 @@ EOF
 # OK - time
 # FAIL - link to stderr
 
-#
-
-osh-html-one() {
-  local input=$1
-  local output=$2
-  mkdir -p $(dirname $output)
-
-}
-
-osh2oil-one() {
-  local input=$1
-  local output=$2
-
-  local task_file=${output}__osh2oil.task.txt
-  local stderr_file=${output}__osh2oil.stderr.txt
-  local out_file=${output}__oil.txt
-
-  run-task-with-status $task_file \
-    bin/osh -n --fix "$@" \
-    > $out_file 2> $stderr_file
-}
-
 process-file() {
   local proj=$1
   local abs_path=$2
@@ -288,145 +266,6 @@ all-parallel() {
   print-manifest | xargs -n 3 -P $JOBS -- $0 process-file || failed=1
 
   tree _tmp/wild
-
-  return
-
-  while read proj abs_path rel_path; do
-    echo
-    echo $proj - $abs_path - $rel_path
-    echo
-    #_parse-and-copy-one $abs_path $rel_path $out_dir || true
-    local output=$out_dir/$rel_path 
-
-    # Ignore errors because we wrote the taskf ile.
-    osh-html-one $abs_path $output || true
-  done < $manifest
-
-  while read proj abs_path rel_path; do
-    echo
-    echo $proj - $abs_path - $rel_path
-    echo
-    #_parse-and-copy-one $abs_path $rel_path $out_dir || true
-    local output=$out_dir/$rel_path 
-
-    # Ignore errors because we wrote the taskf ile.
-    osh2oil-one $abs_path $output || true
-  done < $manifest
-
-  # TODO:
-  # - Make a RESULTS.csv file for each directory
-  #   - size, line count, success/fail, time
-  # - Then make an RESULTS.html per directory?
-  #   - but it has to summarize the subtrees
-  #   - so it has to be bfs?
-  # - test/wild_report.py summary _tmp/wild
-  # - test/wild_report.py ui _tmp/wild
-  #   - technically you could do this in shell?
-  #   - but easier in Python
-
-  # _tmp/wild/
-  #   MANIFEST.txt
-  #   dokku.manifest.txt
-  #   dokku/
-  #     dokku.sh.txt  # copy of the script for viewing
-  #     dokku.sh__count.txt  # line count
-
-  #     dokku.sh__parse.html  # AST
-  #     dokku.sh__parse.task.txt
-  #     dokku.sh__parse.stderr.txt
-
-  #     dokku.sh__osh2oil.task.txt
-  #     dokku.sh__osh2oil.stderr.txt
-  #     dokku.sh__osh2oil.code.txt
-  #
-  #     FAILED.html  # links to stderr.txt
-  #
-  #     RESULTS.csv - each row is a file
-  #     SUMMARY.csv - each row is a subdir
-  #   initd/
-  #   SUMMARY.csv
-  #     # no RESULTS.csv at the top level, because it's all dirs
-  #
-  #   RESULTS.html
-
-  #   dokku.RESULTS.html    # something that can be published
-  #   initd.RESULTS.html    # links to FAILED *.stderr.txt and so forth
-  #                         # or maybe FAILED should not append?
-  #                         # yeah I think you can just have links for each
-  #                         one?
-  #                         # FAILED can be made after the fact
-  # Just find all the *.task.txt with non-zero status with Awk, and then
-  # make it all at once.  No need to use append.  Then you can really run
-  # all tasks in parallel.
-  #
-  # files that don't need to be published: *.task.txt, *.count.txt
-  # everything else needs to be published
-  #
-  # 8 files from each file?  I guess that's OK?  Or the line count can be
-  # done by Awk when it's summarizing.  The copy of the script can also be
-  # done by Awk because we have the manifest.  Do it all in a fast batch for
-  # publishing.
-
-  # Only to HTML AST.  I don't need the text AST.  It doesn't even test
-  # timing?  Well how do I isolate the timing of that?
-  # Then I need Python again?  Or just run another one with
-  # --ast-format=None or something?
-  # Gah.
-  #
-  # _OIL_TIMING=parse and then grep stderr with awk?  As long as it
-  # succeeds.
-
-  # TODO:
-  # - run-task-with-status $path.task.txt
-  # 
-  # And then join them how?
-    # path = ( "_tmp/wild/" name "/" rel_path ".task.txt" )
-    # path = ( "_tmp/wild/" name "/" rel_path ".count.txt" )
-    # every individual fiel
-    #
-    # alternative: you could make a Python tool to do batch parsing?
-    # Might be easier.
-    # It can output the timing of the parse
-    # It can count the lines.  All in one tool.
-    # tools/batch_parse.py
-    # But then it doesn't use osh -n and osh2oil?
-
-  # - run wc -l on each file - $ path.count.txt
-  #   - I guess this can be a separate awk step, for LINE-COUNTS.txt
-  #   - maybe merge them with Awk or Python
-  # - link CSS for the whole project
-  # - FAILED is appended to
-
-  #{ pushd $src_base >/dev/null
-  #  wc -l "$@"
-  #  popd >/dev/null
-  #} > $dest_base/LINE-COUNTS.txt
-
-  ## Don't call it index.html
-  #make-index < $dest_base/LINE-COUNTS.txt > $dest_base/FILES.html
-
-  #_link-or-copy web/osh-to-oil.html $dest_base
-  #_link-or-copy web/osh-to-oil.js $dest_base
-  #_link-or-copy web/osh-to-oil-index.css $dest_base
-
-  ## Truncate files
-  #echo -n '' >$dest_base/FAILED.txt
-  #echo -n '' >$dest_base/FAILED.html
-
-  #local failed=''
-
-  #for f in "$@"; do echo $f; done |
-  #  sort |
-  #  xargs -n 1 -- $0 _parse-and-copy-one $src_base $dest_base ||
-  #  failed=1
-
-  #tree -p $dest_base
-
-  #if test -n "$failed"; then
-  #  log ""
-  #  log "*** Some tasks failed.  See messages above."
-  #fi
-  #echo "Results: file://$PWD/$dest_base"
 }
 
 # TODO: Modify this  to work with wild.
@@ -462,7 +301,6 @@ summarize-dirs() {
 make-html() {
   find _tmp/wild -name RESULTS.csv | test/wild_report.py make-html
 }
-
 
 if test "$(basename $0)" = 'wild-runner.sh'; then
   "$@"

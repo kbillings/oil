@@ -162,7 +162,14 @@ def main(argv):
       print path_parts
       UpdateNodes(root_node, path_parts, st)
 
+    # Debug print
     PrintNodes(root_node)
+    WriteFiles(root_node, '_tmp/wild/www')
+
+    # TODO: Also concat stderr?  Or is that a separate script?
+    # Need to collect files by directory?
+    # Need fragments 
+
 
     # This could just be a flat of dirs?
     # if you see *.task.txt
