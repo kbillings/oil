@@ -102,7 +102,7 @@ _manifest() {
 
   for path in "$@"; do
     echo $name $base_dir/$path $path
-  done > _tmp/wild/$name.manifest.txt
+  done
 }
 
 # generic helper
@@ -115,11 +115,9 @@ _simple-manifest() {
     $(find $base_dir -name '*.sh' -a -printf '%P\n')
 }
 
-write-all-manifests() {
-  mkdir -p _tmp/wild
-
-  oil-sketch-manifest > _tmp/wild/oil-sketch.manifest.txt
-  oil-manifest > _tmp/wild/oil.manifest.txt
+all-manifests() {
+  oil-sketch-manifest
+  oil-manifest
 
   local src
 
@@ -138,9 +136,14 @@ write-all-manifests() {
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
   _simple-manifest ~/git/other/mesos
-
-  wc -l _tmp/wild/*.manifest.txt
 }
+
+write-all-manifests() {
+  mkdir -p _tmp/wild
+  all-manifests > _tmp/wild/MANIFEST.txt
+  wc -l _tmp/wild/MANIFEST.txt
+}
+
 
 readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
 

@@ -246,26 +246,32 @@ EOF
 
 #
 
-parse-project() {
-  local name=$1
+process-file() {
+  local proj=$1
+  local abs_path=$2
+  local rel_path=$3
 
-  local manifest=_tmp/wild/$name.manifest.txt
-  local out_dir=_tmp/wild/$name
+  echo $proj - $abs_path - $rel_path
 
-  # Truncate files
-  #echo -n '' >$out_dir/FAILED.txt
-  #echo -n '' >$out_dir/FAILED.html
+  local raw_base=_tmp/wild/raw/$proj/$rel_path
+  local www_base=_tmp/wild/www/$proj/$rel_path
+  mkdir -p $(dirname $raw_base)
+  mkdir -p $(dirname $www_base)
 
-  # TODO: It would be better to do this with xargs!
-  # Absolute input then out_prefix?
-  # That's a better format?
-  # Well we also want the project name!
+  # Make a literal copy with .txt extension, so we can browse it
+  cp -v $abs_path ${www_base}.txt
 
-  # Count lines all at once with 'wc'?  And also copy them
-  # 'find'?  And then pass them into the report to be parsed as a
-  # dictionary?
+  #local output=$out_dir/$rel_path 
+}
 
-  # xargs -n 3 -P $JOBS -- for the project?
+all-parallel() {
+  local failed=''
+  head -n 10 _tmp/wild/MANIFEST.txt |
+    xargs -n 3 -P $JOBS -- $0 process-file || failed=1
+
+  tree _tmp/wild
+
+  return
 
   while read proj abs_path rel_path; do
     echo
