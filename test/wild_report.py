@@ -90,8 +90,6 @@ def WriteFiles(node, out):
   pass
 
 
-
-
 def main(argv):
   action = argv[1]
 
@@ -135,19 +133,13 @@ def main(argv):
       proj, abs_path, rel_path = line.split()
       #print proj, '-', abs_path, '-', rel_path
 
-      raw_base = os.path.join('_tmp/wild/raw', proj, rel_path)
-      path_parts = raw_base.split('/')[1:]  # get rid of _tmp/
-      print path_parts
-
-      d = os.path.dirname(raw_base)
-      dirs[d].append(raw_base)
-
       def _ReadTaskFile(path):
         with open(path) as f:
           parts = f.read().split()
           status, secs = parts
         return int(status), float(secs)
 
+      raw_base = os.path.join('_tmp/wild/raw', proj, rel_path)
       st = {}
 
       # TODO: Open stderr too to get internal time?
@@ -161,6 +153,13 @@ def main(argv):
       st['osh2oil_status'], st['osh2oil_proc_secs'] = _ReadTaskFile(
           osh2oil_task_path)
 
+      wc_path = raw_base + '__wc.txt'
+      with open(wc_path) as f:
+        st['num_lines'] = int(f.read().split()[0])
+      st['num_files'] = 1
+
+      path_parts = [proj] + rel_path.split('/')
+      print path_parts
       UpdateNodes(root_node, path_parts, st)
 
     PrintNodes(root_node)
