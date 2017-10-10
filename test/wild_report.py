@@ -142,29 +142,26 @@ def main(argv):
       d = os.path.dirname(raw_base)
       dirs[d].append(raw_base)
 
-      file_stats = {}
+      def _ReadTaskFile(path):
+        with open(path) as f:
+          parts = f.read().split()
+          status, secs = parts
+        return int(status), float(secs)
+
+      st = {}
 
       # TODO: Open stderr too to get internal time?
+      # Also what about exit code 2?  Translate to num_failed?
+
       parse_task_path = raw_base + '__parse.task.txt'
-      with open(parse_task_path) as f:
-        try:
-          x, y = f.read().split()
-        except Exception:
-          print >>sys.stderr, 'Error reading %s' % parse_task_path
-          raise
-        file_stats['parse_status'], file_stats['parse_proc_secs'] = x, y
+      st['parse_status'], st['parse_proc_secs'] = _ReadTaskFile(
+          parse_task_path)
       
       osh2oil_task_path = raw_base + '__osh2oil.task.txt'
-      with open(osh2oil_task_path) as f:
-        try:
-          x, y = f.read().split()
-        except Exception:
-          print >>sys.stderr, 'Error reading %s' % osh2oil_task_path
-          raise
-        file_stats['osh2oil_status'], file_stats['osh2oil_proc_secs'] = x, y
+      st['osh2oil_status'], st['osh2oil_proc_secs'] = _ReadTaskFile(
+          osh2oil_task_path)
 
-      #print file_stats 
-      UpdateNodes(root_node, path_parts, file_stats)
+      UpdateNodes(root_node, path_parts, st)
 
     PrintNodes(root_node)
 
