@@ -30,19 +30,18 @@ _parse-one() {
   return $status
 }
 
-osh-html() {
-  bin/osh --ast-format abbrev-html -n "$@"
-}
-
-_osh-html-one() {
+osh-html-one() {
   local input=$1
   local output=$2
+  mkdir -p $(dirname $output)
 
-  local stderr_file=${output}__htmlerr.txt
-  osh-html $input > $output-AST.html 2> $stderr_file
-  local status=$?
+  local task_file=${output}__parse.task.txt
+  local stderr_file=${output}__parse.stderr.txt
+  local out_file=${output}__ast.html
 
-  return $status
+  run-task-with-status $task_file \
+    bin/osh --ast-format abbrev-html -n $input \
+    > $output-AST.html 2> $stderr_file
 }
 
 osh-to-oil() {
@@ -258,14 +257,18 @@ parse-project() {
   mkdir -p $out_dir
 
   # Truncate files
-  echo -n '' >$out_dir/FAILED.txt
-  echo -n '' >$out_dir/FAILED.html
+  #echo -n '' >$out_dir/FAILED.txt
+  #echo -n '' >$out_dir/FAILED.html
 
   while read size abs_path rel_path; do
     echo
     echo $size - $abs_path - $rel_path
     echo
-    _parse-and-copy-one $abs_path $rel_path $out_dir || true
+    #_parse-and-copy-one $abs_path $rel_path $out_dir || true
+    local output=$out_dir/$rel_path 
+
+    # Ignore errors because we wrote the taskf ile.
+    osh-html-one $abs_path $output || true
   done < $manifest
 
   # _tmp/wild/
