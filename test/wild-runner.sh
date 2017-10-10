@@ -30,33 +30,6 @@ _parse-one() {
   return $status
 }
 
-osh-html-one() {
-  local input=$1
-  local output=$2
-  mkdir -p $(dirname $output)
-
-  local task_file=${output}__parse.task.txt
-  local stderr_file=${output}__parse.stderr.txt
-  local out_file=${output}__ast.html
-
-  run-task-with-status $task_file \
-    bin/osh --ast-format abbrev-html -n $input \
-    > $out_file 2> $stderr_file
-}
-
-osh2oil-one() {
-  local input=$1
-  local output=$2
-
-  local task_file=${output}__osh2oil.task.txt
-  local stderr_file=${output}__osh2oil.stderr.txt
-  local out_file=${output}__oil.txt
-
-  run-task-with-status $task_file \
-    bin/osh -n --fix "$@" \
-    > $out_file 2> $stderr_file
-}
-
 _parse-and-copy-one() {
   local input=$1
   local rel_path=$2
@@ -246,6 +219,26 @@ EOF
 
 #
 
+osh-html-one() {
+  local input=$1
+  local output=$2
+  mkdir -p $(dirname $output)
+
+}
+
+osh2oil-one() {
+  local input=$1
+  local output=$2
+
+  local task_file=${output}__osh2oil.task.txt
+  local stderr_file=${output}__osh2oil.stderr.txt
+  local out_file=${output}__oil.txt
+
+  run-task-with-status $task_file \
+    bin/osh -n --fix "$@" \
+    > $out_file 2> $stderr_file
+}
+
 process-file() {
   local proj=$1
   local abs_path=$2
@@ -258,10 +251,30 @@ process-file() {
   mkdir -p $(dirname $raw_base)
   mkdir -p $(dirname $www_base)
 
+  # Count the number of lines.  This creates a tiny file, but we're doing
+  # everything involving $abs_path at once so it's in the FS cache.
+  wc $abs_path > ${raw_base}__wc.txt
+
   # Make a literal copy with .txt extension, so we can browse it
   cp -v $abs_path ${www_base}.txt
 
-  #local output=$out_dir/$rel_path 
+  # Parse the file.
+  local task_file=${raw_base}__parse.task.txt
+  local stderr_file=${raw_base}__parse.stderr.txt
+  local out_file=${www_base}__ast.html
+
+  run-task-with-status $task_file \
+    bin/osh --ast-format abbrev-html -n $abs_path \
+    > $out_file 2> $stderr_file
+
+  # Convert the file.
+  task_file=${raw_base}__osh2oil.task.txt
+  stderr_file=${raw_base}__osh2oil.stderr.txt
+  out_file=${www_base}__oil.txt
+
+  run-task-with-status $task_file \
+    bin/osh -n --fix $abs_path \
+    > $out_file 2> $stderr_file
 }
 
 all-parallel() {
