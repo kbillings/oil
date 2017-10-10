@@ -9,6 +9,45 @@ import os
 import sys
 from collections import defaultdict
 
+# Step 1: # manifest / File system -> files/dirs dicts
+# Step 2: # files/dirs dicts ->  JSON per directory!
+#   A dir lives within a dir!
+#
+# files = {
+#   'dokku': {
+#      dokku: (... row ...)
+#      testing/: { 
+#      }
+#   }
+# }
+# dirs = {
+#   dokku: {
+#     testing/: summary for taht row
+#   }
+# }
+
+class Dir:
+  def __init__(self):
+    # filename -> stats for success, failure, time, size, etc.
+    self.files = {}  
+    # subdir -> Dir object
+    self.dirs = {}  # List of Dir objects
+    # subdir -> total stats failures, etc.
+    self.dir_totals = {}
+
+  def ToJson(self):
+    # files and total
+    # Need to turn these int proper table objects or something
+    print self.files
+    print self.dir_totals
+
+
+# Traverse the root object with the relative path
+# Update it with rows
+def Update(root_dir, rel_path, file_stats):
+  pass
+
+
 
 def main(argv):
   action = argv[1]
@@ -42,6 +81,8 @@ def main(argv):
     # And then join those into HTML?  Maybe two tables?  Separately sortable?
     # Actually they could be JSON tables, and then use a single HTML file?
 
+    # I kind of want a table abstraction, which can be CSV or JSON.
+    # CSV goes to R, JSON goes to the browser.
 
     # Collect work into dirs
     for line in sys.stdin:
@@ -82,6 +123,12 @@ def main(argv):
             parse_status, parse_proc_secs, '-',
             osh2oil_status, osh2oil_proc_secs)
         csv_out.writerow(row)
+
+        # TODO:
+        # - Append to a data structure instead of just raw CSV
+        # - Update all parents with sums of failures and times, num_files,
+        # num_lines, etc.
+
 
     # This could just be a flat of dirs?
     # if you see *.task.txt

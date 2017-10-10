@@ -262,6 +262,10 @@ parse-project() {
   # That's a better format?
   # Well we also want the project name!
 
+  # Count lines all at once with 'wc'?  And also copy them
+  # 'find'?  And then pass them into the report to be parsed as a
+  # dictionary?
+
   # xargs -n 3 -P $JOBS -- for the project?
 
   while read proj abs_path rel_path; do
