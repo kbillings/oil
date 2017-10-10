@@ -44,20 +44,17 @@ osh-html-one() {
     > $output-AST.html 2> $stderr_file
 }
 
-osh-to-oil() {
-  bin/osh -n --fix "$@"
-}
-
-_osh-to-oil-one() {
+osh2oil-one() {
   local input=$1
   local output=$2
 
-  local stderr_file=${output}__osh-to-oil-err.txt
-  # NOTE: Need text extension for some web servers.
-  osh-to-oil $input > ${output}.oil.txt 2> $stderr_file
-  local status=$?
+  local task_file=${output}__osh2oil.task.txt
+  local stderr_file=${output}__osh2oil.stderr.txt
+  local out_file=${output}__oil.txt
 
-  return $status
+  run-task-with-status $task_file \
+    bin/osh -n --fix "$@" \
+    > $out_file 2> $stderr_file
 }
 
 _parse-and-copy-one() {
@@ -269,6 +266,17 @@ parse-project() {
 
     # Ignore errors because we wrote the taskf ile.
     osh-html-one $abs_path $output || true
+  done < $manifest
+
+  while read size abs_path rel_path; do
+    echo
+    echo $size - $abs_path - $rel_path
+    echo
+    #_parse-and-copy-one $abs_path $rel_path $out_dir || true
+    local output=$out_dir/$rel_path 
+
+    # Ignore errors because we wrote the taskf ile.
+    osh2oil-one $abs_path $output || true
   done < $manifest
 
   # _tmp/wild/
