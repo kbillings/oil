@@ -262,6 +262,8 @@ parse-project() {
   # That's a better format?
   # Well we also want the project name!
 
+  # xargs -n 3 -P $JOBS -- for the project?
+
   while read proj abs_path rel_path; do
     echo
     echo $proj - $abs_path - $rel_path

@@ -105,6 +105,16 @@ _manifest() {
   done > _tmp/wild/$name.manifest.txt
 }
 
+# generic helper
+_simple-manifest() {
+  local base_dir=$1
+  shift
+
+  local name=$(basename $base_dir)
+  _manifest $name $base_dir \
+    $(find $base_dir -name '*.sh' -a -printf '%P\n')
+}
+
 write-all-manifests() {
   oil-sketch-manifest > _tmp/wild/oil-sketch.manifest.txt
   oil-manifest > _tmp/wild/oil.manifest.txt
@@ -122,6 +132,9 @@ write-all-manifests() {
   src=~/git/other/dokku
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
+
+  _simple-manifest ~/git/other/wwwoosh
+  _simple-manifest ~/git/other/git
 
   wc -l _tmp/wild/*.manifest.txt
 }
