@@ -74,11 +74,11 @@ def PrintNodes(node, indent=0):
   For debugging, print the tree
   """
   ind = indent * '    '
+  #print('FILES', node.files.keys())
   for name in node.files:
     print '%s%s - %s' % (ind, name, node.files[name])
-  for name in node.dir_totals:
-    print '%s%s/ - %s' % (ind, name, node.dir_totals[name])
   for name in node.dirs:
+    print '%s%s/ - %s' % (ind, name, node.dir_totals[name])
     child = node.dirs[name]
     PrintNodes(child, indent=indent+1)
 
