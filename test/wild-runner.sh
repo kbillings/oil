@@ -217,12 +217,38 @@ EOF
 #
 # Underlying text file:
 #
-# rel_path num_bytes -> num_lines, status/time parse, status/time
-# conversion
+# rel_path num_bytes -> num_lines, parse task status/process time,
+#                       internally measured parse time
+#                       MAYBE: number of nodes, number of unique 
+#                       node types!
+#                       conversion task status/process time
+#
+# Blog post: what's the hairiest single script?  in terms of unique node
+# types.  It would be see there are '87' node types, 228 op_ids, and which
+# scripts use them all.
+# Alpine scripts should be fairly limited
 #
 # Then in display mode:
 # - link to HTML
 # - link to errors: FAILED.html
+#
+# Write a Awk/Python script that makes a CSV
+# THen write one that makes summaries per directory.
+# I want
+
+#
+# Totals by dir
+# - # shell scripts
+# - # lines
+# - failed parses
+# - failed conversions
+# - parse process time
+# - parse time
+#
+# OK - time
+# FAIL - link to stderr
+
+#
 
 parse-project() {
   local name=$1
@@ -258,12 +284,24 @@ parse-project() {
   #     dokku.sh__osh2oil.code.txt
   #
   #     FAILED.html  # links to stderr.txt
+  #
+  #     RESULTS.csv - each row is a file
+  #     SUMMARY.csv - each row is a subdir
   #   initd/
+  #   SUMMARY.csv
+  #     # no RESULTS.csv at the top level, because it's all dirs
   #
   #   RESULTS.html
 
   #   dokku.RESULTS.html    # something that can be published
-  #   initd.RESULTS.html    # links to *.stderr.txt and so forth
+  #   initd.RESULTS.html    # links to FAILED *.stderr.txt and so forth
+  #                         # or maybe FAILED should not append?
+  #                         # yeah I think you can just have links for each
+  #                         one?
+  #                         # FAILED can be made after the fact
+  # Just find all the *.task.txt with non-zero status with Awk, and then
+  # make it all at once.  No need to use append.  Then you can really run
+  # all tasks in parallel.
   #
   # files that don't need to be published: *.task.txt, *.count.txt
   # everything else needs to be published
@@ -273,13 +311,15 @@ parse-project() {
   # done by Awk because we have the manifest.  Do it all in a fast batch for
   # publishing.
 
-  #
   # Only to HTML AST.  I don't need the text AST.  It doesn't even test
   # timing?  Well how do I isolate the timing of that?
   # Then I need Python again?  Or just run another one with
   # --ast-format=None or something?
   # Gah.
   #
+  # _OIL_TIMING=parse and then grep stderr with awk?  As long as it
+  # succeeds.
+
   # TODO:
   # - run-task-with-status $path.task.txt
   # 
