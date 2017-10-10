@@ -277,10 +277,15 @@ process-file() {
     > $out_file 2> $stderr_file
 }
 
+print-manifest() {
+  #head _tmp/wild/MANIFEST.txt 
+  egrep '^dokku|^wwwoosh' _tmp/wild/MANIFEST.txt
+}
+
 all-parallel() {
   local failed=''
-  head -n 10 _tmp/wild/MANIFEST.txt |
-    xargs -n 3 -P $JOBS -- $0 process-file || failed=1
+  #head -n 20 _tmp/wild/MANIFEST.txt |
+  print-manifest | xargs -n 3 -P $JOBS -- $0 process-file || failed=1
 
   tree _tmp/wild
 
@@ -451,7 +456,7 @@ summarize-dirs() {
   #find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
   #find _tmp/wild/dokku -name RESULTS.csv
 
-  cat _tmp/wild/{dokku,wwwoosh}.manifest.txt | test/wild_report.py summarize-dirs
+  print-manifest | test/wild_report.py summarize-dirs
 }
 
 make-html() {

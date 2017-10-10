@@ -69,6 +69,29 @@ def UpdateNodes(node, path_parts, file_stats):
     node.files[first] = file_stats
 
 
+def PrintNodes(node, indent=0):
+  """
+  For debugging, print the tree
+  """
+  ind = indent * '    '
+  for name in node.files:
+    print '%s%s - %s' % (ind, name, node.files[name])
+  for name in node.dir_totals:
+    print '%s%s/ - %s' % (ind, name, node.dir_totals[name])
+  for name in node.dirs:
+    child = node.dirs[name]
+    PrintNodes(child, indent=indent+1)
+
+
+def WriteFiles(node, out):
+  """
+  Write a listing.json file for every directory.
+  """
+  pass
+
+
+
+
 def main(argv):
   action = argv[1]
 
@@ -112,17 +135,17 @@ def main(argv):
       proj, abs_path, rel_path = line.split()
       #print proj, '-', abs_path, '-', rel_path
 
-      base_path = os.path.join('_tmp/wild', proj, rel_path)
-      path_parts = base_path.split('/')[1:]  # get rid of _tmp/
+      raw_base = os.path.join('_tmp/wild/raw', proj, rel_path)
+      path_parts = raw_base.split('/')[1:]  # get rid of _tmp/
       print path_parts
 
-      d = os.path.dirname(base_path)
-      dirs[d].append(base_path)
+      d = os.path.dirname(raw_base)
+      dirs[d].append(raw_base)
 
       file_stats = {}
 
       # TODO: Open stderr too to get internal time?
-      parse_task_path = base_path + '__parse.task.txt'
+      parse_task_path = raw_base + '__parse.task.txt'
       with open(parse_task_path) as f:
         try:
           x, y = f.read().split()
@@ -131,7 +154,7 @@ def main(argv):
           raise
         file_stats['parse_status'], file_stats['parse_proc_secs'] = x, y
       
-      osh2oil_task_path = base_path + '__osh2oil.task.txt'
+      osh2oil_task_path = raw_base + '__osh2oil.task.txt'
       with open(osh2oil_task_path) as f:
         try:
           x, y = f.read().split()
@@ -140,43 +163,10 @@ def main(argv):
           raise
         file_stats['osh2oil_status'], file_stats['osh2oil_proc_secs'] = x, y
 
-      print file_stats 
+      #print file_stats 
       UpdateNodes(root_node, path_parts, file_stats)
-      continue
 
-    #print(dirs)
-
-    if False:
-      paths = glob.glob(os.path.join(d, '*' + suffix))
-      if not paths:
-        #continue
-        pass
-
-      csv_path = os.path.join(d, 'RESULTS.csv')
-      csv_out = csv.writer(open(csv_path, 'w'))
-      csv_out.writerow(HEADER)
-
-      for parse_task_path in paths:
-        filename = os.path.basename(parse_task_path)
-        filename = filename[:-len(suffix)]
-
-        with open(parse_task_path) as f:
-          parse_status, parse_proc_secs = f.read().split()
-
-        osh2oil_task_path = os.path.join(d, filename + '__osh2oil.task.txt')
-        with open(osh2oil_task_path) as f:
-          osh2oil_status, osh2oil_proc_secs = f.read().split()
-
-        row = (filename,
-            parse_status, parse_proc_secs, '-',
-            osh2oil_status, osh2oil_proc_secs)
-        csv_out.writerow(row)
-
-        # TODO:
-        # - Append to a data structure instead of just raw CSV
-        # - Update all parents with sums of failures and times, num_files,
-        # num_lines, etc.
-
+    PrintNodes(root_node)
 
     # This could just be a flat of dirs?
     # if you see *.task.txt
