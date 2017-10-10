@@ -135,6 +135,7 @@ write-all-manifests() {
 
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
+  _simple-manifest ~/git/other/mesos
 
   wc -l _tmp/wild/*.manifest.txt
 }
@@ -210,10 +211,12 @@ parse-hg-other() {
     $(find $src -name '*.sh' -a -printf '%P\n')
 }
 
+# DONE
 parse-git() {
   _parse-project ~/git/other/git
 }
 
+# DONE
 parse-dokku() {
   local src=~/git/other/dokku
 

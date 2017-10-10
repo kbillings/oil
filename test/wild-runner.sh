@@ -41,7 +41,7 @@ osh-html-one() {
 
   run-task-with-status $task_file \
     bin/osh --ast-format abbrev-html -n $input \
-    > $output-AST.html 2> $stderr_file
+    > $out_file 2> $stderr_file
 }
 
 osh2oil-one() {
@@ -286,6 +286,17 @@ parse-project() {
     osh2oil-one $abs_path $output || true
   done < $manifest
 
+  # TODO:
+  # - Make a RESULTS.csv file for each directory
+  #   - size, line count, success/fail, time
+  # - Then make an RESULTS.html per directory?
+  #   - but it has to summarize the subtrees
+  #   - so it has to be bfs?
+  # - test/wild_report.py summary _tmp/wild
+  # - test/wild_report.py ui _tmp/wild
+  #   - technically you could do this in shell?
+  #   - but easier in Python
+
   # _tmp/wild/
   #   MANIFEST.txt
   #   dokku.manifest.txt
@@ -414,6 +425,11 @@ _all-parallel() {
   link-css
 
   html-summary
+}
+
+summarize-dirs() {
+  find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
+  find _tmp/wild/dokku -name RESULTS.csv
 }
 
 
