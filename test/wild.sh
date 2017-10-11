@@ -106,6 +106,10 @@ all-manifests() {
 
   local src
 
+  #
+  # Linux Distros
+  #
+
   src=$ABORIGINAL_DIR
   _manifest aboriginal $src \
     $(find $src -name '*.sh' -printf '%P\n')
@@ -118,9 +122,24 @@ all-manifests() {
   _manifest usr-bin $src \
     $(find $src -name '*.sh' -a -printf '%P\n')
 
+  # Version 1.0.89 extracts to a version-less dir.
+  src=~/git/basis-build/_tmp/debootstrap
+  _manifest debootstrap $src \
+    $(find $src '(' -name debootstrap -o -name functions ')' -a -printf '%P\n') \
+    $(find $src/scripts -type f -a -printf 'scripts/%P\n')
+
+  #
+  # Cloud Stuff
+  #
+  _simple-manifest ~/git/other/mesos
+
   src=~/git/other/dokku
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
+
+  #
+  # Misc Scripts
+  #
 
   # NOTE: These scripts don't end with *.sh
   src=~/git/other/pixelb-scripts
@@ -131,35 +150,12 @@ all-manifests() {
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
   _simple-manifest ~/git/other/mesos
-  _simple-manifest ~/git/other/mesos
 }
 
 write-all-manifests() {
   mkdir -p _tmp/wild
   all-manifests > _tmp/wild/MANIFEST.txt
   wc -l _tmp/wild/MANIFEST.txt
-}
-
-parse-pixelb-scripts() {
-  local src=~/git/other/pixelb-scripts
-  # NOTE: These scripts don't end with *.sh
-  _parse-many \
-    $src \
-    $RESULT_DIR/pixelb-scripts \
-    $(find $src \( -name .git -a -prune \) -o \
-                \(  -type f -a -executable -a -printf '%P\n' \) )
-}
-
-parse-debootstrap() {
-  # Version 1.0.89 extracts to a version-less dir.
-  local src=~/git/basis-build/_tmp/debootstrap
-
-  # NOTE: These scripts don't end with *.sh
-  _parse-many \
-    $src \
-    $RESULT_DIR/debootstrap \
-    $(find $src '(' -name debootstrap -o -name functions ')' -a -printf '%P\n') \
-    $(find $src/scripts -type f -a -printf 'scripts/%P\n')
 }
 
 # WOW.  I found another lexical state in Bazel.  How to I handle this?
