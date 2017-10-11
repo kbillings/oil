@@ -74,22 +74,6 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 """, default_formatter='html')
 
 
-FILES_HEADER = (
-    'filename',
-    'parse_failed', 'parse_proc_secs', 'parse_internal_secs',
-    'osh2oil_failed', 'osh2oil_proc_secs',
-)
-
-DIR_HEADER = (
-    'directory',
-    'num_files',  # total children
-    'num_parse_failed',
-    'parse_proc_secs',  # total for successes
-    'parse_internal_secs',  # total for successes
-    'num_osh2oil_failed',
-    'osh2oil_proc_secs',  # ditto
-)
-
 PAGE_TEMPLATES = {}
 
 # TODO:
@@ -99,7 +83,7 @@ PAGE_TEMPLATES = {}
 
 # - On errors: link to stderr
 #   - Probably want to combine stderr
-#   - move from /raw/ to www.  Could even put them on the listing itself?
+#   - DONE move from /raw/ to www.  Could even put them on the listing itself?
 
 # - Measure internal process time
 # - header and footer CSS
@@ -155,7 +139,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td align="right">{num_lines|commas}</td>
       <td align="right">
         {.section parse_failed}
-          <a href="">FAIL</a>
+          <a href="#stderr_parse_{name}">FAIL</a>
         {.or}
           <a href="{name}__ast.html">OK</a>
         {.end}
@@ -167,7 +151,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td align="right">
         {# not sure how to use if? }
         {.section osh2oil_failed}
-          <a href="">FAIL</a>
+          <a href="#stderr_osh2oil_{name}">FAIL</a>
         {.or}
           <a href="{name}__oil.txt">OK</a>
         {.end}
@@ -252,13 +236,13 @@ def UpdateNodes(node, path_parts, file_stats):
     parse_stderr = file_stats.pop('parse_stderr')
     if parse_stderr or file_stats['parse_failed']:
       node.stderr.append({
-          'anchor': 'err_parse_%s' % first,
+          'anchor': 'stderr_parse_%s' % first,
           'contents': parse_stderr,
       })
     osh2oil_stderr = file_stats.pop('osh2oil_stderr')
     if osh2oil_stderr or file_stats['osh2oil_failed']:
       node.stderr.append({
-          'anchor': 'err_osh2oil_%s' % first,
+          'anchor': 'stderr_osh2oil_%s' % first,
           'contents': osh2oil_stderr,
       })
 
