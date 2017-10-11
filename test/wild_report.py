@@ -93,14 +93,17 @@ DIR_HEADER = (
 PAGE_TEMPLATES = {}
 
 # TODO:
-# - Turn failure into boolean, not exit code
-# - On succes: Show links to AST and conversion
+# - DONE Turn failure into boolean, not exit code
+# - DONE On succes: Show links to AST and conversion
 #   - OK OK -- and maybe the filename is all 3 side by side
+
 # - On errors: link to stderr
 #   - Probably want to combine stderr
+#   - move from /raw/ to www.  Could even put them on the listing itself?
+
 # - Measure internal process time
 # - header and footer CSS
-# - how to fill in the Nav
+# - Fill in the Nav
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     '{rel_path}/',
@@ -175,35 +178,24 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 <table>
 {.end}
 
-{.section symlinks}
-<table>
-  <thead>
-    <tr>
-      <td>Name</td>
-      <td></td>
-      <td>Target</td>
-    </tr>
-  </thead>
-  {.repeated section @}
-    <tr>
-      <td>{name}</td>
-      <td>&rarr;</td> {# right arrow}
-      <td>{target}</td>
-    </tr>
-  {.end}
-</table>
-{.end}
-
 {.if test empty}
   <i>(empty dir)</i>
 {.end}
 
-{.section dir_text}
-<hr/>
+<h2>stderr</h2>
+
+{.repeated section stderr}
+<p>
+<a name="{anchor|htmltag}"></a>
+<span class="anchor">{anchor|html}</span>
 <pre>
-{@}
+{contents|html}
 </pre>
+</p>
+
+<hr/>
 {.end}
+
 """)
 
 
@@ -220,6 +212,11 @@ class DirNode:
     self.files = {}  # filename -> stats for success/failure, time, etc.
     self.dirs = {}  # subdir name -> Dir object
     self.dir_totals = {}  # subdir -> summed stats
+
+    # show all the non-empty stderr here?
+    # __osh2oil.stderr.txt
+    # __parse.stderr.txt
+    self.stderr = {}
 
 
 # Traverse the root object with the relative path
@@ -271,7 +268,6 @@ def WriteJsonFiles(node, out_dir):
     d = {'files': node.files, 'dirs': node.dir_totals}
     json.dump(d, f)
 
-
   log('Wrote %s', path)
 
   for name, child in node.dirs.iteritems():
@@ -300,6 +296,8 @@ def WriteHtmlFiles(node, out_dir, rel_path='ROOT', base_url=''):
         'files': files,
         'dirs': dirs,
         'base_url': base_url,
+        # TODO: derive from DirNode.stderr
+        'stderr': [{'anchor': '#foo', 'contents': 'error'}],
     }
 
     for name in node.files:
