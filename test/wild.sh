@@ -310,14 +310,18 @@ write-all-manifests() {
   wc -l $out
 }
 
-# 514K lines
+# 514K lines without "big"
+# 1.30 M lines with "big".
+# 760K lines without ltmain.sh.  Hm need to get up to 1M.
+
 # The biggest ones are all ltmain.sh though.
 count-lines() {
   # We need this weird --files0-from because there are too many files.  xargs
   # would split it into multiple invocations.
   #
   # It would be nicer if wc just had an option not to sum?
-  awk '{print $2}' _tmp/wild/MANIFEST.txt | 
+  time awk '{print $2}' _tmp/wild/MANIFEST.txt | 
+    grep -v ltmain.sh |
     tr '\n' '\0' | wc -l --files0-from - | sort -n
 }
 
