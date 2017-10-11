@@ -16,9 +16,11 @@ import jsontemplate
 
 # TODO:
 # - Measure internal process time
-# - Run it on all files
+# - link to osh-to-oil.sh instead of the original
+# - Do not show lines per second on failure!
+# - Add table-lib.js so we can sort the results!
 #
-# - Delete lots of old code in wild.sh
+# - DONE Run it on all files
 
 # JSON Template Evaluation:
 #

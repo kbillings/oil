@@ -53,7 +53,8 @@ print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
   #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
-  egrep -- 'mesos' _tmp/wild/MANIFEST.txt
+  #egrep -- 'mesos' _tmp/wild/MANIFEST.txt
+  cat _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {
@@ -64,6 +65,9 @@ parse-all() {
   # Limit the output depth
   tree -L 3 _tmp/wild
 }
+
+# Takes 3m 47s on 7 cores for 513K lines.
+# So that's like 230 seconds or so.  It should really take 1 second!
 
 all-parallel() {
   time {

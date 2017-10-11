@@ -312,7 +312,7 @@ write-manifest() {
   wc -l $out
 }
 
-# 442K lines without "big" without ltmain.sh
+# 442K lines without "big" and without ltmain.sh
 # TODO: Include a few ltmain.sh.  Have to de-dupe them.
 
 # 1.30 M lines with "big".
@@ -325,8 +325,8 @@ count-lines() {
   #
   # It would be nicer if wc just had an option not to sum?
   time awk '{print $2}' _tmp/wild/MANIFEST.txt | 
-    grep -v ltmain.sh |
     tr '\n' '\0' | wc -l --files0-from - | sort -n
+    #grep -v ltmain.sh |
 }
 
 #
