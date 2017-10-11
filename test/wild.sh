@@ -132,10 +132,48 @@ all-manifests() {
   # Cloud Stuff
   #
   _simple-manifest ~/git/other/mesos
+  _simple-manifest ~/git/other/chef-bcpc
 
   src=~/git/other/dokku
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
+
+  #
+  # Esoteric
+  #
+
+  _simple-manifest ~/git/other/lishp
+
+  src=~/git/other/mal/bash
+  _manifest make-a-lisp-bash $src \
+    $(find $src '(' -name '*.sh' ')' -a -printf '%P\n')
+
+  src=~/git/other/gherkin
+  _manifest $(basename $src) $src \
+    $(find $src '(' -name '*.sh' -o -name 'gherkin' ')' -a -printf '%P\n')
+
+  src=~/git/other/balls
+  _manifest $(basename $src) $src \
+    $(find $src '(' -name '*.sh' -o -name balls -o -name esh ')' -a \
+                -printf '%P\n')
+
+  src=~/git/other/bashcached
+  _manifest $(basename $src) $src \
+    $(find $src '(' -name '*.sh' -o -name 'bashcached' ')' -a -printf '%P\n')
+
+  src=~/git/other/quinedb
+  _manifest $(basename $src) $src \
+    $(find $src '(' -name '*.sh' -o -name 'quinedb' ')' -a -printf '%P\n')
+
+  src=~/git/other/bashttpd
+  _manifest $(basename $src) $src \
+    $(find $src -name 'bashttpd' -a -printf '%P\n')
+
+
+  #
+  # Other Languages
+  #
+  _simple-manifest ~/git/other/julia
 
   #
   # Misc Scripts
@@ -178,73 +216,6 @@ parse-hg-other() {
     $src \
     $RESULT_DIR/hg-other-parsed \
     $(find $src -name '*.sh' -a -printf '%P\n')
-}
-
-parse-balls() {
-  local src=~/git/other/balls
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/balls-parsed \
-    $(find $src '(' -name '*.sh' -o -name balls -o -name esh ')' -a \
-                -printf '%P\n')
-}
-
-parse-make-a-lisp() {
-  local src=~/git/other/mal/bash
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/make-a-lisp-parsed \
-    $(find $src '(' -name '*.sh' ')' -a -printf '%P\n')
-}
-
-parse-gherkin() {
-  local src=~/git/other/gherkin
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/gherkin-parsed \
-    $(find $src '(' -name '*.sh' -o -name 'gherkin' ')' -a -printf '%P\n')
-}
-
-parse-lishp() {
-  _parse-project ~/git/other/lishp
-}
-
-parse-bashcached() {
-  local src=~/git/other/bashcached
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bashcached-parsed \
-    $(find $src '(' -name '*.sh' -o -name 'bashcached' ')' -a -printf '%P\n')
-}
-
-parse-quinedb() {
-  local src=~/git/other/quinedb
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/quinedb-parsed \
-    $(find $src '(' -name '*.sh' -o -name 'quinedb' ')' -a -printf '%P\n')
-}
-
-parse-bashttpd() {
-  local src=~/git/other/bashttpd
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bashttpd \
-    $(find $src -name 'bashttpd' -a -printf '%P\n')
-}
-
-parse-chef-bcpc() {
-  _parse-project ~/git/other/chef-bcpc
-}
-
-parse-julia() {
-  _parse-project ~/git/other/julia
 }
 
 # uses a bare "for" in a function!
