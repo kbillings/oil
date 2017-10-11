@@ -60,23 +60,6 @@ _parse-configure-scripts() {
 # Corpora
 #
 
-oil-sketch() {
-  local src=~/git/oil-sketch
-  _parse-many \
-    $src \
-    $RESULT_DIR/oil-sketch \
-    $(cd $src && echo *.sh {awk,demo,make,misc,regex,tools}/*.sh)
-}
-
-# just do a for loop for these
-this-repo() {
-  local src=$PWD
-  _parse-many \
-    $src \
-    $RESULT_DIR/oil \
-    configure install *.sh {benchmarks,build,test,scripts,opy}/*.sh
-}
-
 # TODO: Where do we write the base dir?
 oil-sketch-manifest() {
   local base_dir=~/git/oil-sketch
@@ -115,6 +98,8 @@ _simple-manifest() {
     $(find $base_dir -name '*.sh' -a -printf '%P\n')
 }
 
+readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
+
 all-manifests() {
   oil-sketch-manifest
   oil-manifest
@@ -129,6 +114,10 @@ all-manifests() {
   _manifest initd $src \
     $(find $src -type f -a -executable -a -printf '%P\n')
 
+  src=/usr/bin
+  _manifest usr-bin $src \
+    $(find $src -name '*.sh' -a -printf '%P\n')
+
   src=~/git/other/dokku
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
@@ -136,40 +125,13 @@ all-manifests() {
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
   _simple-manifest ~/git/other/mesos
+  _simple-manifest ~/git/other/mesos
 }
 
 write-all-manifests() {
   mkdir -p _tmp/wild
   all-manifests > _tmp/wild/MANIFEST.txt
   wc -l _tmp/wild/MANIFEST.txt
-}
-
-
-readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
-
-parse-aboriginal() {
-  # We want word splitting
-  _parse-many \
-    $ABORIGINAL_DIR \
-    $RESULT_DIR/aboriginal \
-    $(find $ABORIGINAL_DIR -name '*.sh' -printf '%P\n')
-}
-
-parse-initd() {
-  local src=/etc/init.d 
-  # NOTE: These scripts don't end with *.sh
-  _parse-many \
-    $src \
-    $RESULT_DIR/initd \
-    $(find $src -type f -a -executable -a -printf '%P\n')
-}
-
-parse-usr-bin() {
-  local src=/usr/bin
-  _parse-many \
-    $src \
-    $RESULT_DIR/usr-bin \
-    $(find $src -name '*.sh' -a -printf '%P\n')
 }
 
 parse-pixelb-scripts() {
@@ -216,25 +178,6 @@ parse-hg-other() {
     $(find $src -name '*.sh' -a -printf '%P\n')
 }
 
-# DONE
-parse-git() {
-  _parse-project ~/git/other/git
-}
-
-# DONE
-parse-dokku() {
-  local src=~/git/other/dokku
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/dokku \
-    $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
-}
-
-parse-mesos() {
-  _parse-project ~/git/other/mesos
-}
-
 parse-balls() {
   local src=~/git/other/balls
 
@@ -243,10 +186,6 @@ parse-balls() {
     $RESULT_DIR/balls-parsed \
     $(find $src '(' -name '*.sh' -o -name balls -o -name esh ')' -a \
                 -printf '%P\n')
-}
-
-parse-wwwoosh() {
-  _parse-project ~/git/other/wwwoosh
 }
 
 parse-make-a-lisp() {

@@ -257,7 +257,8 @@ process-file() {
 
 print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
-  egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
+  #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
+  head -n 1000 _tmp/wild/MANIFEST.txt
 }
 
 all-parallel() {
