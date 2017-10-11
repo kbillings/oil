@@ -1,19 +1,72 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Directory Listing (wild tests)</title>
+  <head>
+    <title>Directory Listing (wild tests)</title>
 
-  <link rel="stylesheet" type="text/css" href="wild.css" />
-  <script type="text/javascript" src="ajax.js"></script>
-  <script type="text/javascript" src="wild.js"></script>
+    <link rel="stylesheet" type="text/css" href="wild.css" />
 
-</head>
-<body>
-  <!--
-    Nav Bar (like srcbook)
-    List Dirs
-    List Files
-  -->
+    <script type="text/javascript" src="ajax.js"></script>
+    <script type="text/javascript" src="wild.js"></script>
 
-</body>
+  </head>
+  <body onload="initDir(location.hash, gTableStates, kStatusElem);"
+        onhashchange="initDir(location.hash, gTableStates, kStatusElem);">
+
+    <p id="status"></p>
+    <!--
+      Nav Bar (like srcbook)
+      List Dirs
+      List Files
+    -->
+
+    <h2>Dirs</h2>
+
+    <table id="dirs">
+      <thead>
+        <tr>
+          <td>
+            Filename
+          </td>
+          <td>
+            Parse
+          </td>
+          <td>
+            Translate
+          </td>
+
+        </tr>
+      </thead>
+
+      <tbody>
+      </tbody>
+    </table>
+
+    <h2>Files</h2>
+
+    <table id="files">
+      <thead>
+        <tr>
+          <td>
+            Filename
+          </td>
+          <td>
+            Parse
+          </td>
+          <td>
+            Translate
+          </td>
+
+        </tr>
+      </thead>
+
+      <tbody>
+      </tbody>
+    </table>
+
+    <script type="text/javascript">
+      var gTableStates = {};
+      var kStatusElem = document.getElementById('status');
+    </script>
+
+  </body>
 </html>

@@ -1,0 +1,31 @@
+/* For the wild-dir.html, etc. */
+
+#status {
+  text-align: center;
+  font-size: x-large;
+  color: darkred;
+}
+
+body {
+  margin: 0 auto;
+  width: 80em;
+}
+
+table {
+  padding: 10px;  /* Padding makes it look nicer. */
+  border-collapse: collapse;  /* this is like old cellpadding */
+}
+
+thead {
+  font-weight: bold;
+  /*text-align: center;*/
+}
+
+/* like cellspacing? */
+td {
+  padding: 5px;
+}
+
+h2 {
+  /*text-align: center;*/
+}

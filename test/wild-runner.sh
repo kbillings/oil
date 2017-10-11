@@ -291,11 +291,17 @@ _all-parallel() {
   html-summary
 }
 
-summarize-dirs() {
-  #find _tmp/wild/dokku -type d | test/wild_report.py summarize-dirs
-  #find _tmp/wild/dokku -name RESULTS.csv
-
+make-report() {
   print-manifest | test/wild_report.py summarize-dirs
+
+  # NOTE: ajax.js is a copy of oilshell.org/analytics
+
+  ln -s -f -v \
+    $PWD/web/wild-dir.html \
+    $PWD/web/wild.css \
+    $PWD/web/wild.js \
+    $PWD/web/ajax.js \
+    _tmp/wild/www
 }
 
 make-html() {

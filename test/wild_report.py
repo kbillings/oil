@@ -70,7 +70,7 @@ def WriteFiles(node, out_dir):
   """
   Write a listing.json file for every directory.
   """
-  path = os.path.join(out_dir, 'entries.json')
+  path = os.path.join(out_dir, 'INDEX.json')
   with open(path, 'w') as f:
     d = {'files': node.files, 'dirs': node.dir_totals}
     json.dump(d, f)
@@ -148,9 +148,6 @@ def main(argv):
     # Need to collect files by directory?
     # Need fragments 
 
-
-    # This could just be a flat of dirs?
-    # if you see *.task.txt
   elif action == 'make-html':
     # dict of directory -> sub dir stats?
 
@@ -180,8 +177,6 @@ def main(argv):
 
   else:
     raise RuntimeError('Invalid action %r' % action)
-
-  print 'Hello from wild_report.py'
 
 
 if __name__ == '__main__':
