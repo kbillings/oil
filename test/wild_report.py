@@ -32,6 +32,8 @@ import jsontemplate
 # - Lack of location information on undefined variables is annoying.  It spews
 # a big stack trace.
 # - The styles thing seems awkward.  Copied from srcbook.
+# - I don't have {total_secs|%.3f} , but the
+# LookupChain/DictRegistry/CallableRegistry thing is quite onerous.
 #
 # Good parts:
 # Just making one big dict is pretty nice.
@@ -124,7 +126,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 
       <td>{parse_proc_secs}</td>
       <td>{parse_proc_secs}</td>
-      <td>{num_files|commas}</td>
+      <td>{lines_per_sec}</td>
 
       {.osh2oil_failed?}
         <td class="fail">{osh2oil_failed|commas}</td>
@@ -168,7 +170,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       </td>
       <td>{parse_proc_secs}</td>
       <td>{parse_proc_secs}</td>
-      <td>{num_files|commas}</td>
+      <td>{lines_per_sec}</td>
 
       <td>
         {# not sure how to use if? }
@@ -338,6 +340,9 @@ def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
       stats = node.files[name]
       entry = dict(stats)
       entry['name'] = name
+      # TODO: This should be internal time
+      lines_per_sec = entry['num_lines'] / entry['parse_proc_secs']
+      entry['lines_per_sec'] = '%.1f' % lines_per_sec
       files.append(entry)
 
     dirs = []
@@ -345,6 +350,9 @@ def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
       stats = node.dir_totals[name]
       entry = dict(stats)
       entry['name'] = name
+      # TODO: This should be internal time
+      lines_per_sec = entry['num_lines'] / entry['parse_proc_secs']
+      entry['lines_per_sec'] = '%.1f' % lines_per_sec
       dirs.append(entry)
 
     data = {
@@ -356,15 +364,13 @@ def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
         'nav': _MakeNav(rel_path),
     }
 
-    for name in node.files:
-      pass
-    for name in node.dir_totals:
-      pass
     group = PAGE_TEMPLATES['LISTING']
     body = BODY_STYLE.expand(data, group=group)
     f.write(body)
 
   log('Wrote %s', path)
+
+  # Recursive
   for name, child in node.dirs.iteritems():
     child_out = os.path.join(out_dir, name)
     child_rel = os.path.join(rel_path, name)
