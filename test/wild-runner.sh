@@ -261,7 +261,7 @@ print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
   #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
-  egrep 'gherkin|balls|bash|quine' _tmp/wild/MANIFEST.txt
+  egrep '^j' _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {

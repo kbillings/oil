@@ -169,6 +169,14 @@ all-manifests() {
   _manifest $(basename $src) $src \
     $(find $src -name 'bashttpd' -a -printf '%P\n')
 
+  #
+  # Parsers
+  #
+  local src=~/git/other/j
+  _manifest $(basename $src) $src \
+    $(find $src -type f -a  -name j -a -printf '%P\n')
+
+  _simple-manifest ~/git/other/JSON.sh
 
   #
   # Other Languages
@@ -218,16 +226,6 @@ parse-hg-other() {
     $(find $src -name '*.sh' -a -printf '%P\n')
 }
 
-# uses a bare "for" in a function!
-parse-j() {
-  local src=~/git/other/j
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/j-parsed \
-    $(find $src -type f -a  -name j -a -printf '%P\n')
-}
-
 # Doesn't parse because of extended glob.
 parse-wd() {
   local src=~/git/other/wd
@@ -236,10 +234,6 @@ parse-wd() {
     $src \
     $RESULT_DIR/wd \
     $(find $src -type f -a  -name wd -a -printf '%P\n')
-}
-
-parse-json-sh() {
-  _parse-project ~/git/other/JSON.sh
 }
 
 # declare -a foo=(..) is not parsed right
