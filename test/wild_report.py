@@ -3,43 +3,27 @@
 wild_report.py
 """
 
-import csv
+#import csv
+import json
 import glob
 import os
 import sys
 from collections import defaultdict
 
-# Step 1: # manifest / File system -> files/dirs dicts
-# Step 2: # files/dirs dicts ->  JSON per directory!
-#   A dir lives within a dir!
-#
-# files = {
-#   'dokku': {
-#      dokku: (... row ...)
-#      testing/: { 
-#      }
-#   }
-# }
-# dirs = {
-#   dokku: {
-#     testing/: summary for taht row
-#   }
-# }
+
+def log(msg, *args):
+  if msg:
+    msg = msg % args
+  print >>sys.stderr, msg
+
 
 class DirNode:
-  def __init__(self):
-    # filename -> stats for success, failure, time, size, etc.
-    self.files = {}  
-    # subdir -> Dir object
-    self.dirs = {}  # List of Dir objects
-    # subdir -> total stats failures, etc.
-    self.dir_totals = {}
+  """Entry in the file system tree."""
 
-  def ToJson(self):
-    # files and total
-    # Need to turn these int proper table objects or something
-    print self.files
-    print self.dir_totals
+  def __init__(self):
+    self.files = {}  # filename -> stats for success/failure, time, etc.
+    self.dirs = {}  # subdir name -> Dir object
+    self.dir_totals = {}  # subdir -> summed stats
 
 
 # Traverse the root object with the relative path
@@ -77,17 +61,29 @@ def PrintNodes(node, indent=0):
   #print('FILES', node.files.keys())
   for name in node.files:
     print '%s%s - %s' % (ind, name, node.files[name])
-  for name in node.dirs:
+  for name, child in node.dirs.iteritems():
     print '%s%s/ - %s' % (ind, name, node.dir_totals[name])
-    child = node.dirs[name]
     PrintNodes(child, indent=indent+1)
 
 
-def WriteFiles(node, out):
+def WriteFiles(node, out_dir):
   """
   Write a listing.json file for every directory.
   """
-  pass
+  path = os.path.join(out_dir, 'entries.json')
+  with open(path, 'w') as f:
+    d = {'files': node.files, 'dirs': node.dir_totals}
+    json.dump(d, f)
+
+    for name in node.files:
+      pass
+    for name in node.dir_totals:
+      pass
+
+  log('Wrote %s', path)
+
+  for name, child in node.dirs.iteritems():
+    WriteFiles(child, os.path.join(out_dir, name))
 
 
 def main(argv):
@@ -106,24 +102,6 @@ def main(argv):
         'parse_status', 'parse_proc_secs', 'parse_internal_secs',
         'osh2oil_status', 'osh2oil_proc_secs',
     )
-    suffix = '__parse.task.txt'
-
-    dirs = defaultdict(list)
-
-    # Or you could just do it all in one pass.
-
-    # Make a data frame per dir.  And then write those to CSV?
-    # And then make HTML with the CSV?
-    #
-    # files have: links to success/fail
-    # dirs have: number of files
-    #
-    # or make FILES.csv and DIRS.csv
-    # And then join those into HTML?  Maybe two tables?  Separately sortable?
-    # Actually they could be JSON tables, and then use a single HTML file?
-
-    # I kind of want a table abstraction, which can be CSV or JSON.
-    # CSV goes to R, JSON goes to the browser.
 
     root_node = DirNode()
 
