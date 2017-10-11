@@ -222,19 +222,19 @@ process-file() {
   local abs_path=$2
   local rel_path=$3
 
-  echo $proj - $abs_path - $rel_path
-
   local raw_base=_tmp/wild/raw/$proj/$rel_path
   local www_base=_tmp/wild/www/$proj/$rel_path
   mkdir -p $(dirname $raw_base)
   mkdir -p $(dirname $www_base)
+
+  log "--- Processing $rel_path"
 
   # Count the number of lines.  This creates a tiny file, but we're doing
   # everything involving $abs_path at once so it's in the FS cache.
   wc $abs_path > ${raw_base}__wc.txt
 
   # Make a literal copy with .txt extension, so we can browse it
-  cp -v $abs_path ${www_base}.txt
+  cp $abs_path ${www_base}.txt
 
   # Parse the file.
   local task_file=${raw_base}__parse.task.txt
@@ -255,10 +255,12 @@ process-file() {
     > $out_file 2> $stderr_file
 }
 
+readonly NUM_TASKS=200
+
 print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
-  head -n 1000 _tmp/wild/MANIFEST.txt
+  head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
 }
 
 all-parallel() {
@@ -266,30 +268,8 @@ all-parallel() {
   #head -n 20 _tmp/wild/MANIFEST.txt |
   print-manifest | xargs -n 3 -P $JOBS -- $0 process-file || failed=1
 
-  tree _tmp/wild
-}
-
-# TODO: Modify this  to work with wild.
-_all-parallel() {
-  # wild.sh
-  write-all-manifests
-  # TODO: Write manifest.txt?
-  # Everything is single-threaded except the top level?  OK fine.
-
-  # NOTE: For spec tests, they get HTML for free here.  We need to make our
-  # own HTML for each project.
-  # And then a summary for all projects.
-
-  head -n $NUM_TASKS _tmp/wild/MANIFEST.txt \
-    | xargs -n 1 -P $JOBS --verbose -- $0 parse-project || true
-
-  #ls -l _tmp/spec
-
-  #all-tests-to-html
-
-  link-css
-
-  html-summary
+  # Limit the output depth
+  tree -L 3 _tmp/wild
 }
 
 wild-report() {
@@ -299,19 +279,9 @@ wild-report() {
 make-report() {
   print-manifest | wild-report summarize-dirs
 
-  # NOTE: ajax.js is a copy of oilshell.org/analytics
-
-  return
   ln -s -f -v \
-    $PWD/web/wild-dir.html \
     $PWD/web/wild.css \
-    $PWD/web/wild.js \
-    $PWD/web/ajax.js \
     _tmp/wild/www
-}
-
-make-html() {
-  find _tmp/wild -name RESULTS.csv | test/wild_report.py make-html
 }
 
 if test "$(basename $0)" = 'wild-runner.sh'; then
