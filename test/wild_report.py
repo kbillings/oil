@@ -76,8 +76,8 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 
 FILES_HEADER = (
     'filename',
-    'parse_status', 'parse_proc_secs', 'parse_internal_secs',
-    'osh2oil_status', 'osh2oil_proc_secs',
+    'parse_failed', 'parse_proc_secs', 'parse_internal_secs',
+    'osh2oil_failed', 'osh2oil_proc_secs',
 )
 
 DIR_HEADER = (
@@ -92,6 +92,16 @@ DIR_HEADER = (
 
 PAGE_TEMPLATES = {}
 
+# TODO:
+# - Turn failure into boolean, not exit code
+# - On succes: Show links to AST and conversion
+#   - OK OK -- and maybe the filename is all 3 side by side
+# - On errors: link to stderr
+#   - Probably want to combine stderr
+# - Measure internal process time
+# - header and footer CSS
+# - how to fill in the Nav
+
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     '{rel_path}/',
 """\
@@ -103,6 +113,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td align="right">Lines</td>
       <td align="right">Parse Failures</td>
       <td align="right">Total Parse Time (secs)</td>
+      <td align="right">Internal Parse Time (secs)</td>
       <td align="right">Parsed Lines/sec</td>
       <td align="right">Translation Failures</td>
       <td>Name</td>
@@ -112,10 +123,11 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     <tr>
       <td align="right">{num_files|commas}</td>
       <td align="right">{num_lines|commas}</td>
-      <td align="right">{parse_status|commas}</td>
-      <td align="right">{parse_proc_secs|commas}</td>
+      <td align="right">{parse_failed|commas}</td>
+      <td align="right">{parse_proc_secs}</td>
+      <td align="right">{parse_proc_secs}</td>
       <td align="right">{num_files|commas}</td>
-      <td align="right">{osh2oil_status|commas}</td>
+      <td align="right">{osh2oil_failed|commas}</td>
       <td><code><a href="{name|htmltag}/listing.html">{name|html}/</a></code></td>
     </tr>
   {.end}
@@ -138,12 +150,26 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   {.repeated section @}
     <tr>
       <td align="right">{num_lines|commas}</td>
-      <td align="right">{parse_status|commas}</td>
+      <td align="right">
+        {.section parse_failed}
+          <a href="">FAIL</a>
+        {.or}
+          <a href="{name}__ast.html">OK</a>
+        {.end}
+      </td>
       <td align="right">{parse_proc_secs}</td>
       <td align="right">{parse_proc_secs}</td>
       <td align="right">{num_files|commas}</td>
-      <td align="right">{osh2oil_status|commas}</td>
-      <td><code><a href="{name|htmltag}">{name|html}</a></code></td>
+
+      <td align="right">
+        {# not sure how to use if? }
+        {.section osh2oil_failed}
+          <a href="">FAIL</a>
+        {.or}
+          <a href="{name}__oil.txt">OK</a>
+        {.end}
+      </td>
+      <td><code><a href="{name|htmltag}.txt">{name|html}</a></code></td>
     </tr>
   {.end}
 <table>
@@ -315,7 +341,9 @@ def main(argv):
         with open(path) as f:
           parts = f.read().split()
           status, secs = parts
-        return int(status), float(secs)
+        # Turn it into pass/fail
+        num_failed = 1 if int(status) >= 1 else 0
+        return num_failed, float(secs)
 
       raw_base = os.path.join('_tmp/wild/raw', proj, rel_path)
       st = {}
@@ -324,11 +352,11 @@ def main(argv):
       # Also what about exit code 2?  Translate to num_failed?
 
       parse_task_path = raw_base + '__parse.task.txt'
-      st['parse_status'], st['parse_proc_secs'] = _ReadTaskFile(
+      st['parse_failed'], st['parse_proc_secs'] = _ReadTaskFile(
           parse_task_path)
       
       osh2oil_task_path = raw_base + '__osh2oil.task.txt'
-      st['osh2oil_status'], st['osh2oil_proc_secs'] = _ReadTaskFile(
+      st['osh2oil_failed'], st['osh2oil_proc_secs'] = _ReadTaskFile(
           osh2oil_task_path)
 
       wc_path = raw_base + '__wc.txt'
