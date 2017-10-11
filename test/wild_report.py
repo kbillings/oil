@@ -47,11 +47,9 @@ BODY_STYLE = jsontemplate.Template("""\
 {.template NAV}
     </div>
 
-    <div id="{main_div_id}">
-{.template SEARCH_BOX}
+    <div id="">
 {.template BODY}
     </div>
-{.template GOOGLE_ANALYTICS}
   </body>
 
 </html>
@@ -82,7 +80,7 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 PAGE_TEMPLATES = {}
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
-    '{dir_name}/ in {src_name}',
+    '{rel_path}/',
 """\
 {.section dirs}
 <table>
@@ -94,8 +92,8 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   </thead>
   {.repeated section @}
     <tr>
-      <td align="right">{leaf_count|commas}</td>
-      <td><a href="{name|htmltag}/">{name|html}/</a></td>
+      <td align="right">{num_files|commas}</td>
+      <td><a href="{name|htmltag}/listing.html">{name|html}/</a></td>
     </tr>
   {.end}
 </table>
@@ -111,7 +109,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   </thead>
   {.repeated section @}
     <tr>
-      <td align="right">{bytes|commas}</td>
+      <td align="right">{num_files|commas}</td>
       <td><a href="{name|htmltag}">{name|html}</a></td>
     </tr>
   {.end}
@@ -221,10 +219,29 @@ def WriteJsonFiles(node, out_dir):
     WriteJsonFiles(child, os.path.join(out_dir, name))
 
 
-def WriteHtmlFiles(node, out_dir):
+def WriteHtmlFiles(node, out_dir, rel_path='ROOT'):
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
-    data = {'files': node.files, 'dirs': node.dir_totals}
+    files = []
+    for name in sorted(node.files):
+      stats = node.files[name]
+      entry = dict(stats)
+      entry['name'] = name
+      files.append(entry)
+
+    dirs = []
+    for name in sorted(node.dir_totals):
+      stats = node.dir_totals[name]
+      entry = dict(stats)
+      entry['name'] = name
+      dirs.append(entry)
+
+    data = {
+        'rel_path': rel_path,
+        'files': files,
+        'dirs': dirs,
+    }
+
     for name in node.files:
       pass
     for name in node.dir_totals:
@@ -232,6 +249,12 @@ def WriteHtmlFiles(node, out_dir):
     group = PAGE_TEMPLATES['LISTING']
     body = BODY_STYLE.expand(data, group=group)
     f.write(body)
+
+  log('Wrote %s', path)
+  for name, child in node.dirs.iteritems():
+    child_out = os.path.join(out_dir, name)
+    child_rel = os.path.join(rel_path, name)
+    WriteHtmlFiles(child, child_out, child_rel)
 
 
 FILES_HEADER = (
