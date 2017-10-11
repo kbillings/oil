@@ -115,6 +115,31 @@ all-manifests() {
   # Shell Frameworks/Collections
   #
 
+  # Brendan Gregg's performance scripts.
+  # Find executable scripts, since they don't end in sh.
+  # net/tcpretrans is written in Perl.
+  src=~/git/other/perf-tools
+  _manifest $(basename $src) $src \
+    $(find $src \
+      \( -name .git -a -prune \) -o \
+      \( -name tcpretrans -a -prune \) -o \
+      \( -type f -a -executable -a -printf '%P\n' \) )
+
+  # ASDF meta package/version manager.
+  # Note that the language-specific plugins are specified (as remote repos)
+  # here: https://github.com/asdf-vm/asdf-plugins/tree/master/plugins
+  # They # could be used for more tests.
+
+  src=~/git/other/asdf
+  _manifest $(basename $src) $src \
+    $(find $src \( -name '*.sh' -o -name '*.bash' \) -a -printf '%P\n' )
+
+  src=~/git/other/scripts-to-rule-them-all
+  _manifest $(basename $src) $src \
+    $(find $src \
+      \( -name .git -a -prune \) -o \
+      \( -type f -a -executable -a -printf '%P\n' \) )
+
   #
   # Linux Distros
   #
@@ -276,47 +301,6 @@ parse-wd() {
     $(find $src -type f -a  -name wd -a -printf '%P\n')
 }
 
-# NOTE:
-# Find executable scripts, since they don't end in sh.
-# net/tcpretrans is written in Perl.
-parse-perf-tools() {
-  local src=~/git/other/perf-tools
-  local files=$(find $src \
-                \( -name .git -a -prune \) -o \
-                \( -name tcpretrans -a -prune \) -o \
-                \( -type f -a -executable -a -printf '%P\n' \) )
-  #echo $files
-  time _parse-many \
-    $src \
-    $RESULT_DIR/perf-tools-parsed \
-    $files
-}
-
-
-# ASDF meta package/version manager.
-# Note that the language-specific plugins are specified (as remote repos) here:
-# https://github.com/asdf-vm/asdf-plugins/tree/master/plugins
-# They could be used for more tests.
-
-parse-asdf() {
-  local src=~/git/other/asdf
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/asdf \
-    $(find $src \( -name '*.sh' -o -name '*.bash' \) -a -printf '%P\n' )
-}
-
-parse-scripts-to-rule-them-all() {
-  local src=~/git/other/scripts-to-rule-them-all
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/scripts-to-rule-them-all \
-    $(find $src \
-      \( -name .git -a -prune \) -o \
-      \( -type f -a -executable -a -printf '%P\n' \) )
-}
 
 #
 # Big projects

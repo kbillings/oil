@@ -261,7 +261,7 @@ print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
   #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
-  egrep '^bash' _tmp/wild/MANIFEST.txt
+  egrep '^asdf|perf-tools' _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {
