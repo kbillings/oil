@@ -284,20 +284,23 @@ all-manifests() {
   # Big
   #
 
-  return
   log "Finding Files in Big Projects"
   readonly BIG_BUILD_ROOT=/media/andy/hdd-8T/big-build/ssd-backup/sdb/build
 
-  _sh-manifest $BIG_BUILD_ROOT/hg/other/mozilla-central/
+  # 2m 18s the first time.
+  # 2 seconds the second time.  This is a big slow drive.
+  time {
+    _sh-manifest $BIG_BUILD_ROOT/hg/other/mozilla-central/
 
-  _sh-manifest $BIG_BUILD_ROOT/chrome
-  _configure-manifest $BIG_BUILD_ROOT/chrome
+    _sh-manifest $BIG_BUILD_ROOT/chrome
+    _configure-manifest $BIG_BUILD_ROOT/chrome
 
-  _sh-manifest $BIG_BUILD_ROOT/android
-  _configure-manifest $BIG_BUILD_ROOT/android
+    _sh-manifest $BIG_BUILD_ROOT/android
+    _configure-manifest $BIG_BUILD_ROOT/android
 
-  _sh-manifest $BIG_BUILD_ROOT/openwrt
-  _sh-manifest $BIG_BUILD_ROOT/OpenWireless
+    _sh-manifest $BIG_BUILD_ROOT/openwrt
+    _sh-manifest $BIG_BUILD_ROOT/OpenWireless
+  }
 }
 
 write-all-manifests() {
