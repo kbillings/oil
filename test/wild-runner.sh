@@ -260,16 +260,23 @@ readonly NUM_TASKS=200
 print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
-  head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
+  #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
+  egrep '^pixelb' _tmp/wild/MANIFEST.txt
 }
 
-all-parallel() {
+parse-all() {
   local failed=''
   #head -n 20 _tmp/wild/MANIFEST.txt |
   print-manifest | xargs -n 3 -P $JOBS -- $0 process-file || failed=1
 
   # Limit the output depth
   tree -L 3 _tmp/wild
+}
+
+all-parallel() {
+  test/wild.sh write-all-manifests
+  parse-all
+  make-report
 }
 
 wild-report() {

@@ -122,6 +122,12 @@ all-manifests() {
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
 
+  # NOTE: These scripts don't end with *.sh
+  src=~/git/other/pixelb-scripts
+  _manifest pixelb-scripts $src \
+    $(find $src \( -name .git -a -prune \) -o \
+                \( -type f -a -executable -a -printf '%P\n' \) )
+
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
   _simple-manifest ~/git/other/mesos
