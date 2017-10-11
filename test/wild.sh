@@ -8,19 +8,6 @@
 # TODO:
 # - There are a lot of hard-coded source paths here.  These files could
 # published in a tarball or torrent.
-#
-# - Combine FILES.html and FAILED.html: need a table like wild.sh.
-# - Add ability to do them in parallel
-# - Add ability to parse them only
-#   - right now we have 3 actions: test AST, html AST, and osh-to-oil.  This
-#     does a lot of redundant work.
-# - Archive them all into a big tarball?
-#
-# Maybe have an overall overview page?  Like the spec tests?
-# project/
-#
-# Instead of '%P' then format should be '%p %P' I think?  And maybe add the
-# size?
 
 set -o nounset
 set -o pipefail
@@ -28,24 +15,13 @@ set -o errexit
 
 source test/wild-runner.sh
 
-
 readonly RESULT_DIR=_tmp/wild
 
 #
 # Helpers
 #
 
-# generic helper
-_parse-project() {
-  local src=$1
-  local name=$(basename $src)
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/$name \
-    $(find $src -name '*.sh' -a -printf '%P\n')
-}
-
+# TODO: Remove
 _parse-configure-scripts() {
   local src=$1
   local name=$(basename $src)
@@ -54,6 +30,26 @@ _parse-configure-scripts() {
     $src \
     $RESULT_DIR/$name-configure-parsed \
     $(find $src -name 'configure' -a -printf '%P\n')
+}
+
+_manifest() {
+  local name=$1
+  local base_dir=$2
+  shift 2
+
+  for path in "$@"; do
+    echo $name $base_dir/$path $path
+  done
+}
+
+# generic helper
+_simple-manifest() {
+  local base_dir=$1
+  shift
+
+  local name=$(basename $base_dir)
+  _manifest $name $base_dir \
+    $(find $base_dir -name '*.sh' -a -printf '%P\n')
 }
 
 #
@@ -78,27 +74,11 @@ oil-manifest() {
   done
 }
 
-_manifest() {
-  local name=$1
-  local base_dir=$2
-  shift 2
-
-  for path in "$@"; do
-    echo $name $base_dir/$path $path
-  done
-}
-
-# generic helper
-_simple-manifest() {
-  local base_dir=$1
-  shift
-
-  local name=$(basename $base_dir)
-  _manifest $name $base_dir \
-    $(find $base_dir -name '*.sh' -a -printf '%P\n')
-}
-
 readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
+
+#
+# All
+#
 
 all-manifests() {
   oil-sketch-manifest
@@ -107,8 +87,40 @@ all-manifests() {
   local src
 
   #
+  # Bash stuff
+  #
+  src=~/git/other/bash-completion
+  _manifest $(basename $src) $src \
+    $(find $src/completions -type f -a -printf 'completions/%P\n')
+
+  # Bats bash test framework.  It appears to be fairly popular.
+  src=~/git/other/bats
+  _manifest $(basename $src) $src \
+    $(find $src \
+      \( -wholename '*/libexec/*' -a -type f -a \
+         -executable -a -printf '%P\n' \) )
+
+  # Bash debugger?
+  src=~/src/bashdb-4.4-0.92
+  _manifest bashdb $src \
+    $(find $src -name '*.sh' -a -printf '%P\n')
+
+  src=~/git/other/Bash-Snippets
+  _manifest $(basename $src) $src \
+    $(find $src \
+      \( -name .git -a -prune \) -o \
+      \( -type f -a -executable -a -printf '%P\n' \) )
+
+  #
+  # Shell Frameworks/Collections
+  #
+
+  #
   # Linux Distros
   #
+
+  _simple-manifest ~/git/other/minimal
+  _simple-manifest ~/git/other/linuxkit
 
   src=$ABORIGINAL_DIR
   _manifest aboriginal $src \
@@ -133,15 +145,41 @@ all-manifests() {
   #
   _simple-manifest ~/git/other/mesos
   _simple-manifest ~/git/other/chef-bcpc
+  _simple-manifest ~/git/other/sandstorm
+  _simple-manifest ~/git/other/kubernetes
 
   src=~/git/other/dokku
   _manifest dokku $src \
     $(find $src '(' -name '*.sh' -o -name dokku ')' -a -printf '%P\n')
 
   #
+  # Google
+  #
+  _simple-manifest ~/git/other/bazel
+  _simple-manifest ~/git/other/protobuf
+
+  #
+  # Other shells
+  #
+
+  _simple-manifest ~/git/other/ast  # korn shell stuff
+  _simple-manifest ~/src/mksh
+
+  #
+  # Other Languages
+  #
+
+  _simple-manifest ~/git/other/julia
+  _simple-manifest ~/git/other/sdk  # Dart SDK?
+
+  _simple-manifest ~/git/other/micropython
+  _simple-manifest ~/git/other/staticpython  # statically linked build
+
+  #
   # Esoteric
   #
 
+  _simple-manifest ~/git/scratch/shasm
   _simple-manifest ~/git/other/lishp
 
   src=~/git/other/mal/bash
@@ -179,9 +217,8 @@ all-manifests() {
   _simple-manifest ~/git/other/JSON.sh
 
   #
-  # Other Languages
+  # Big
   #
-  _simple-manifest ~/git/other/julia
 
   #
   # Misc Scripts
@@ -196,6 +233,9 @@ all-manifests() {
   _simple-manifest ~/git/other/wwwoosh
   _simple-manifest ~/git/other/git
   _simple-manifest ~/git/other/mesos
+
+  _simple-manifest ~/git/other/exp  # What is this?
+
 }
 
 write-all-manifests() {
@@ -236,69 +276,6 @@ parse-wd() {
     $(find $src -type f -a  -name wd -a -printf '%P\n')
 }
 
-# declare -a foo=(..) is not parsed right
-parse-shasm() {
-  _parse-project ~/git/scratch/shasm
-}
-
-parse-sandstorm() {
-  _parse-project ~/git/other/sandstorm
-}
-
-parse-kubernetes() {
-  _parse-project ~/git/other/kubernetes
-}
-
-parse-sdk() {
-  _parse-project ~/git/other/sdk
-}
-
-# korn shell stuff
-parse-ast() {
-  _parse-project ~/git/other/ast
-}
-
-parse-bazel() {
-  _parse-project ~/git/other/bazel
-}
-
-parse-bash-completion() {
-  local src=~/git/other/bash-completion
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bash-completion-parsed \
-    $(find $src/completions -type f -a -printf 'completions/%P\n')
-}
-
-parse-protobuf() {
-  _parse-project ~/git/other/protobuf
-}
-
-parse-mksh() {
-  _parse-project ~/src/mksh
-}
-
-parse-exp() {
-  _parse-project ~/git/other/exp
-}
-
-parse-minimal-linux() {
-  _parse-project ~/git/other/minimal
-}
-
-parse-micropython() {
-  _parse-project ~/git/other/micropython
-}
-
-parse-staticpython() {
-  _parse-project ~/git/other/staticpython
-}
-
-parse-linuxkit() {
-  _parse-project ~/git/other/linuxkit
-}
-
 # NOTE:
 # Find executable scripts, since they don't end in sh.
 # net/tcpretrans is written in Perl.
@@ -315,39 +292,6 @@ parse-perf-tools() {
     $files
 }
 
-# Bats bash test framework.  It appears to be fairly popular.
-parse-bats() {
-  local src=~/git/other/bats
-  local files=$(find $src \
-                \( -wholename '*/libexec/*' -a -type f -a \
-                   -executable -a -printf '%P\n' \) )
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bats \
-    $files
-}
-
-parse-bashdb() {
-  local src=~/src/bashdb-4.4-0.92
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bashdb \
-    $(find $src -name '*.sh' -a -printf '%P\n')
-}
-
-parse-bash-snippets() {
-  local src=~/git/other/Bash-Snippets
-  local files=$(find $src \
-                \( -name .git -a -prune \) -o \
-                \( -type f -a -executable -a -printf '%P\n' \) )
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/bash-snippets \
-    $files
-}
 
 # ASDF meta package/version manager.
 # Note that the language-specific plugins are specified (as remote repos) here:
@@ -379,16 +323,16 @@ parse-scripts-to-rule-them-all() {
 #
 
 parse-linux() {
-  _parse-project ~/src/linux-4.8.7
+  _simple-manifest ~/src/linux-4.8.7
 }
 
 parse-mozilla() {
-  _parse-project \
+  _simple-manifest \
     /mnt/ssd-1T/build/ssd-backup/sdb/build/hg/other/mozilla-central/
 }
 
 parse-chrome() {
-  _parse-project \
+  _simple-manifest \
     /mnt/ssd-1T/build/ssd-backup/sdb/build/chrome
 }
 
@@ -398,7 +342,7 @@ parse-chrome2() {
 }
 
 parse-android() {
-  _parse-project \
+  _simple-manifest \
     /mnt/ssd-1T/build/ssd-backup/sdb/build/android
 }
 
@@ -408,12 +352,12 @@ parse-android2() {
 }
 
 parse-openwrt() {
-  _parse-project \
+  _simple-manifest \
     /mnt/ssd-1T/build/ssd-backup/sdb/build/openwrt
 }
 
 parse-openwireless() {
-  _parse-project \
+  _simple-manifest \
     /mnt/ssd-1T/build/ssd-backup/sdb/build/OpenWireless
 }
 
