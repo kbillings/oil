@@ -35,11 +35,8 @@ BODY_STYLE = jsontemplate.Template("""\
   <head>
     <title>{.template TITLE}</title>
 
-    <script src="/static/ui.js" type="text/javascript"></script>
-    {.section pygments_css}
-      <link rel="stylesheet" type="text/css" href="/static/pyg-default.css" />
-    {.end}
-    <link rel="stylesheet" type="text/css" href="/static/ui.css" />
+    <script src="{base_url}wild.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{base_url}wild.css" />
   </head>
 
   <body>
@@ -77,6 +74,22 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 """, default_formatter='html')
 
 
+FILES_HEADER = (
+    'filename',
+    'parse_status', 'parse_proc_secs', 'parse_internal_secs',
+    'osh2oil_status', 'osh2oil_proc_secs',
+)
+
+DIR_HEADER = (
+    'directory',
+    'num_files',  # total children
+    'num_parse_failed',
+    'parse_proc_secs',  # total for successes
+    'parse_internal_secs',  # total for successes
+    'num_osh2oil_failed',
+    'osh2oil_proc_secs',  # ditto
+)
+
 PAGE_TEMPLATES = {}
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
@@ -87,11 +100,21 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   <thead>
     <tr>
       <td align="right">Files</td>
+      <td align="right">Lines</td>
+      <td align="right">Parse Failures</td>
+      <td align="right">Total Parse Time</td>
+      <td align="right">Parsed Lines Per Second</td>
+      <td align="right">Translation Failures</td>
       <td>Name</td>
     </tr>
   </thead>
   {.repeated section @}
     <tr>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
       <td align="right">{num_files|commas}</td>
       <td><a href="{name|htmltag}/listing.html">{name|html}/</a></td>
     </tr>
@@ -103,12 +126,20 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 <table>
   <thead>
     <tr>
-      <td align="right">Bytes</td>
+      <td align="right">Lines</td>
+      <td align="right">Parse Status</td>
+      <td align="right">Parse Process Time</td>
+      <td align="right">Internal Parse Time</td>
+      <td align="right">Translation Status</td>
       <td>Name</td>
     </tr>
   </thead>
   {.repeated section @}
     <tr>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
+      <td align="right">{num_files|commas}</td>
       <td align="right">{num_files|commas}</td>
       <td><a href="{name|htmltag}">{name|html}</a></td>
     </tr>
@@ -219,7 +250,7 @@ def WriteJsonFiles(node, out_dir):
     WriteJsonFiles(child, os.path.join(out_dir, name))
 
 
-def WriteHtmlFiles(node, out_dir, rel_path='ROOT'):
+def WriteHtmlFiles(node, out_dir, rel_path='ROOT', base_url=''):
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
     files = []
@@ -240,6 +271,7 @@ def WriteHtmlFiles(node, out_dir, rel_path='ROOT'):
         'rel_path': rel_path,
         'files': files,
         'dirs': dirs,
+        'base_url': base_url,
     }
 
     for name in node.files:
@@ -254,25 +286,8 @@ def WriteHtmlFiles(node, out_dir, rel_path='ROOT'):
   for name, child in node.dirs.iteritems():
     child_out = os.path.join(out_dir, name)
     child_rel = os.path.join(rel_path, name)
-    WriteHtmlFiles(child, child_out, child_rel)
-
-
-FILES_HEADER = (
-    'filename',
-    'parse_status', 'parse_proc_secs', 'parse_internal_secs',
-    'osh2oil_status', 'osh2oil_proc_secs',
-)
-
-DIR_HEADER = (
-    'directory',
-    'num_files',  # total children
-    'num_parse_failed',
-    'parse_proc_secs',  # total for successes
-    'parse_internal_secs',  # total for successes
-    'num_osh2oil_failed',
-    'osh2oil_proc_secs',  # ditto
-)
-
+    child_base = base_url + '../'
+    WriteHtmlFiles(child, child_out, rel_path=child_rel, base_url=child_base)
 
 
 def main(argv):
