@@ -66,7 +66,7 @@ def PrintNodes(node, indent=0):
     PrintNodes(child, indent=indent+1)
 
 
-def WriteFiles(node, out_dir):
+def WriteJsonFiles(node, out_dir):
   """
   Write a listing.json file for every directory.
   """
@@ -83,7 +83,31 @@ def WriteFiles(node, out_dir):
   log('Wrote %s', path)
 
   for name, child in node.dirs.iteritems():
-    WriteFiles(child, os.path.join(out_dir, name))
+    WriteJsonFiles(child, os.path.join(out_dir, name))
+
+
+def WriteHtmlFiles(node, out_dir):
+  path = os.path.join(out_dir, 'index.html')
+  with open(path, 'w') as f:
+    pass
+
+
+FILES_HEADER = (
+    'filename',
+    'parse_status', 'parse_proc_secs', 'parse_internal_secs',
+    'osh2oil_status', 'osh2oil_proc_secs',
+)
+
+DIR_HEADER = (
+    'directory',
+    'num_files',  # total children
+    'num_parse_failed',
+    'parse_proc_secs',  # total for successes
+    'parse_internal_secs',  # total for successes
+    'num_osh2oil_failed',
+    'osh2oil_proc_secs',  # ditto
+)
+
 
 
 def main(argv):
@@ -96,12 +120,6 @@ def main(argv):
     # I guess it is a BFS so you can just assume?
     # os.path.dirname() on the full path?
     # Or maybe you need the output files?
-
-    HEADER = (
-        'filename',
-        'parse_status', 'parse_proc_secs', 'parse_internal_secs',
-        'osh2oil_status', 'osh2oil_proc_secs',
-    )
 
     root_node = DirNode()
 
@@ -142,38 +160,12 @@ def main(argv):
 
     # Debug print
     PrintNodes(root_node)
-    WriteFiles(root_node, '_tmp/wild/www')
+    WriteJsonFiles(root_node, '_tmp/wild/www')
+    WriteHtmlFiles(root_node, '_tmp/wild/www')
 
     # TODO: Also concat stderr?  Or is that a separate script?
     # Need to collect files by directory?
     # Need fragments 
-
-  elif action == 'make-html':
-    # dict of directory -> sub dir stats?
-
-    HEADER = (
-        'directory',
-        'num_files',  # total children
-        'num_parse_failed',
-        'parse_proc_secs',  # total for successes
-        'parse_internal_secs',  # total for successes
-        'num_osh2oil_failed',
-        'osh2oil_proc_secs',  # ditto
-    )
-
-    dirs = {}
-
-    # _tmp/wild is teh base dir.
-    for line in sys.stdin:
-      print line
-
-    # Now iterate over RESULTS.csv
-    # Assume BFS?
-    # TODO: copy from treemap/treesum
-
-    # RESULTS.html in every directory?
-    # For every file, increment all its parents?
-    pass
 
   else:
     raise RuntimeError('Invalid action %r' % action)

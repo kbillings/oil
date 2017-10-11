@@ -296,6 +296,7 @@ make-report() {
 
   # NOTE: ajax.js is a copy of oilshell.org/analytics
 
+  return
   ln -s -f -v \
     $PWD/web/wild-dir.html \
     $PWD/web/wild.css \
