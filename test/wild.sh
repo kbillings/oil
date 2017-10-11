@@ -21,17 +21,6 @@ readonly RESULT_DIR=_tmp/wild
 # Helpers
 #
 
-# TODO: Remove
-_parse-configure-scripts() {
-  local src=$1
-  local name=$(basename $src)
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/$name-configure-parsed \
-    $(find $src -name 'configure' -a -printf '%P\n')
-}
-
 _manifest() {
   local name=$1
   local base_dir=$2
@@ -43,7 +32,7 @@ _manifest() {
 }
 
 # generic helper
-_simple-manifest() {
+_sh-manifest() {
   local base_dir=$1
   shift
 
@@ -52,8 +41,17 @@ _simple-manifest() {
     $(find $base_dir -name '*.sh' -a -printf '%P\n')
 }
 
+_configure-manifest() {
+  local base_dir=$1
+  shift
+
+  local name=$(basename $base_dir)
+  _manifest ${name}__configure $base_dir \
+    $(find $src -name 'configure' -a -printf '%P\n')
+}
+
 #
-# Corpora
+# Special Case Corpora Using Explicit Globs
 #
 
 # TODO: Where do we write the base dir?
@@ -144,8 +142,8 @@ all-manifests() {
   # Linux Distros
   #
 
-  _simple-manifest ~/git/other/minimal
-  _simple-manifest ~/git/other/linuxkit
+  _sh-manifest ~/git/other/minimal
+  _sh-manifest ~/git/other/linuxkit
 
   src=$ABORIGINAL_DIR
   _manifest aboriginal $src \
@@ -166,15 +164,15 @@ all-manifests() {
     $(find $src/scripts -type f -a -printf 'scripts/%P\n')
 
   # Kernel
-  _simple-manifest ~/src/linux-4.8.7
+  _sh-manifest ~/src/linux-4.8.7
 
   #
   # Cloud Stuff
   #
-  _simple-manifest ~/git/other/mesos
-  _simple-manifest ~/git/other/chef-bcpc
-  _simple-manifest ~/git/other/sandstorm
-  _simple-manifest ~/git/other/kubernetes
+  _sh-manifest ~/git/other/mesos
+  _sh-manifest ~/git/other/chef-bcpc
+  _sh-manifest ~/git/other/sandstorm
+  _sh-manifest ~/git/other/kubernetes
 
   src=~/git/other/dokku
   _manifest dokku $src \
@@ -183,32 +181,32 @@ all-manifests() {
   #
   # Google
   #
-  _simple-manifest ~/git/other/bazel
-  _simple-manifest ~/git/other/protobuf
+  _sh-manifest ~/git/other/bazel
+  _sh-manifest ~/git/other/protobuf
 
   #
   # Other shells
   #
 
-  _simple-manifest ~/git/other/ast  # korn shell stuff
-  _simple-manifest ~/src/mksh
+  _sh-manifest ~/git/other/ast  # korn shell stuff
+  _sh-manifest ~/src/mksh
 
   #
   # Other Languages
   #
 
-  _simple-manifest ~/git/other/julia
-  _simple-manifest ~/git/other/sdk  # Dart SDK?
+  _sh-manifest ~/git/other/julia
+  _sh-manifest ~/git/other/sdk  # Dart SDK?
 
-  _simple-manifest ~/git/other/micropython
-  _simple-manifest ~/git/other/staticpython  # statically linked build
+  _sh-manifest ~/git/other/micropython
+  _sh-manifest ~/git/other/staticpython  # statically linked build
 
   #
   # Esoteric
   #
 
-  _simple-manifest ~/git/scratch/shasm
-  _simple-manifest ~/git/other/lishp
+  _sh-manifest ~/git/scratch/shasm
+  _sh-manifest ~/git/other/lishp
 
   src=~/git/other/mal/bash
   _manifest make-a-lisp-bash $src \
@@ -242,7 +240,7 @@ all-manifests() {
   _manifest $(basename $src) $src \
     $(find $src -type f -a  -name j -a -printf '%P\n')
 
-  _simple-manifest ~/git/other/JSON.sh
+  _sh-manifest ~/git/other/JSON.sh
 
 
   #
@@ -259,9 +257,6 @@ all-manifests() {
   _manifest hg-other $src \
     $(find $src -name '*.sh' -a -printf '%P\n')
 
-  #
-  # Big
-  #
 
   #
   # Misc Scripts
@@ -273,63 +268,43 @@ all-manifests() {
     $(find $src \( -name .git -a -prune \) -o \
                 \( -type f -a -executable -a -printf '%P\n' \) )
 
-  _simple-manifest ~/git/other/wwwoosh
-  _simple-manifest ~/git/other/git
-  _simple-manifest ~/git/other/mesos
+  _sh-manifest ~/git/other/wwwoosh
+  _sh-manifest ~/git/other/git
+  _sh-manifest ~/git/other/mesos
 
-  _simple-manifest ~/git/other/exp  # What is this?
+  _sh-manifest ~/git/other/exp  # What is this?
 
   # Something related to WebDriver
   # Doesn't parse because of extended glob.
   src=~/git/other/wd
   _manifest $(basename $src) $src \
     $(find $src -type f -a  -name wd -a -printf '%P\n')
+
+  #
+  # Big
+  #
+
+  return
+  log "Finding Files in Big Projects"
+  readonly BIG_BUILD_ROOT=/media/andy/hdd-8T/big-build/ssd-backup/sdb/build
+
+  _sh-manifest $BIG_BUILD_ROOT/hg/other/mozilla-central/
+
+  _sh-manifest $BIG_BUILD_ROOT/chrome
+  _configure-manifest $BIG_BUILD_ROOT/chrome
+
+  _sh-manifest $BIG_BUILD_ROOT/android
+  _configure-manifest $BIG_BUILD_ROOT/android
+
+  _sh-manifest $BIG_BUILD_ROOT/openwrt
+  _sh-manifest $BIG_BUILD_ROOT/OpenWireless
 }
 
 write-all-manifests() {
   mkdir -p _tmp/wild
-  all-manifests > _tmp/wild/MANIFEST.txt
-  wc -l _tmp/wild/MANIFEST.txt
-}
-
-
-#
-# Big projects
-#
-
-parse-mozilla() {
-  _simple-manifest \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/hg/other/mozilla-central/
-}
-
-parse-chrome() {
-  _simple-manifest \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/chrome
-}
-
-parse-chrome2() {
-  _parse-configure-scripts \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/chrome
-}
-
-parse-android() {
-  _simple-manifest \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/android
-}
-
-parse-android2() {
-  _parse-configure-scripts \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/android
-}
-
-parse-openwrt() {
-  _simple-manifest \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/openwrt
-}
-
-parse-openwireless() {
-  _simple-manifest \
-    /mnt/ssd-1T/build/ssd-backup/sdb/build/OpenWireless
+  local out=_tmp/wild/MANIFEST.txt
+  all-manifests > $out
+  wc -l $out
 }
 
 #
