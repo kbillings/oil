@@ -307,6 +307,17 @@ write-all-manifests() {
   wc -l $out
 }
 
+# 514K lines
+# The biggest ones are all ltmain.sh though.
+count-lines() {
+  # We need this weird --files0-from because there are too many files.  xargs
+  # would split it into multiple invocations.
+  #
+  # It would be nicer if wc just had an option not to sum?
+  awk '{print $2}' _tmp/wild/MANIFEST.txt | 
+    tr '\n' '\0' | wc -l --files0-from - | sort -n
+}
+
 #
 # Find Biggest Shell Scripts in Aboriginal Source Tarballs
 #
