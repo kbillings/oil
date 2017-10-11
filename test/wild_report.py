@@ -13,6 +13,22 @@ from collections import defaultdict
 import urllib
 import jsontemplate
 
+# JSON Template Evaluation:
+#
+# - {.if}{.or} is confusing
+# I think there is even a bug with {.if}{.else}{.end} -- it accepts it but
+# doesn't do the right thing!
+#   - {.if test} does work though, but it took me awhile to remember that or
+#   even find it in the source code.  I don't like this separate predicate
+#   language.  Could just be PHP-ish I guess.
+# - Predicates are a little annoying.
+# - Lack of location information on undefined variables is annoying.  It spews
+# a big stack trace.
+# - The styles thing seems awkward.  Copied from srcbook.
+#
+# Good parts:
+# Just making one big dict is pretty nice.
+
 T = jsontemplate.Template
 
 F = {
@@ -171,8 +187,12 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 
   {.repeated section @}
     <p>
-    <a name="{anchor|htmltag}"></a>
-    <span class="anchor">{anchor|html}</span>
+    <a name="stderr_{action}_{name|htmltag}"></a>
+    {.if test parsing}
+      Parsing {name|html}
+    {.or}
+      Translating {name|html}
+    {.end}
 
     <pre>
     {contents|html}
@@ -236,13 +256,17 @@ def UpdateNodes(node, path_parts, file_stats):
     parse_stderr = file_stats.pop('parse_stderr')
     if parse_stderr or file_stats['parse_failed']:
       node.stderr.append({
-          'anchor': 'stderr_parse_%s' % first,
+          'parsing': True,
+          'action': 'parse',
+          'name': first,
           'contents': parse_stderr,
       })
     osh2oil_stderr = file_stats.pop('osh2oil_stderr')
     if osh2oil_stderr or file_stats['osh2oil_failed']:
       node.stderr.append({
-          'anchor': 'stderr_osh2oil_%s' % first,
+          'parsing': False,
+          'action': 'osh2oil',
+          'name': first,
           'contents': osh2oil_stderr,
       })
 
@@ -278,7 +302,7 @@ def WriteJsonFiles(node, out_dir):
     WriteJsonFiles(child, os.path.join(out_dir, name))
 
 
-def WriteHtmlFiles(node, out_dir, rel_path='ROOT', base_url=''):
+def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
     files = []
