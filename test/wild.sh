@@ -166,6 +166,9 @@ all-manifests() {
   # Kernel
   _sh-manifest ~/src/linux-4.8.7
 
+  # Git
+  _sh-manifest ~/git/other/git
+
   #
   # Cloud Stuff
   #
@@ -201,10 +204,13 @@ all-manifests() {
   _sh-manifest ~/git/other/micropython
   _sh-manifest ~/git/other/staticpython  # statically linked build
 
+  _sh-manifest ~/git/other/exp  # Go experimental repo
+
   #
   # Esoteric
   #
 
+  _sh-manifest ~/git/other/wwwoosh
   _sh-manifest ~/git/scratch/shasm
   _sh-manifest ~/git/other/lishp
 
@@ -233,15 +239,16 @@ all-manifests() {
   _manifest $(basename $src) $src \
     $(find $src -name 'bashttpd' -a -printf '%P\n')
 
+
   #
   # Parsers
   #
+
   local src=~/git/other/j
   _manifest $(basename $src) $src \
     $(find $src -type f -a  -name j -a -printf '%P\n')
 
   _sh-manifest ~/git/other/JSON.sh
-
 
   #
   # Grab Bag
@@ -257,7 +264,6 @@ all-manifests() {
   _manifest hg-other $src \
     $(find $src -name '*.sh' -a -printf '%P\n')
 
-
   #
   # Misc Scripts
   #
@@ -268,11 +274,6 @@ all-manifests() {
     $(find $src \( -name .git -a -prune \) -o \
                 \( -type f -a -executable -a -printf '%P\n' \) )
 
-  _sh-manifest ~/git/other/wwwoosh
-  _sh-manifest ~/git/other/git
-  _sh-manifest ~/git/other/mesos
-
-  _sh-manifest ~/git/other/exp  # What is this?
 
   # Something related to WebDriver
   # Doesn't parse because of extended glob.
@@ -284,6 +285,7 @@ all-manifests() {
   # Big
   #
 
+  return
   log "Finding Files in Big Projects"
   readonly BIG_BUILD_ROOT=/media/andy/hdd-8T/big-build/ssd-backup/sdb/build
 
@@ -303,14 +305,16 @@ all-manifests() {
   }
 }
 
-write-all-manifests() {
+write-manifest() {
   mkdir -p _tmp/wild
   local out=_tmp/wild/MANIFEST.txt
   all-manifests > $out
   wc -l $out
 }
 
-# 514K lines without "big"
+# 442K lines without "big" without ltmain.sh
+# TODO: Include a few ltmain.sh.  Have to de-dupe them.
+
 # 1.30 M lines with "big".
 # 760K lines without ltmain.sh.  Hm need to get up to 1M.
 
