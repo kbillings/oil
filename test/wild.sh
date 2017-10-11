@@ -79,7 +79,9 @@ readonly ABORIGINAL_DIR=~/src/aboriginal-1.4.5
 #
 
 all-manifests() {
-  oil-sketch-manifest
+  # Don't expose this repo for now
+  #oil-sketch-manifest
+
   oil-manifest
 
   local src
@@ -144,6 +146,10 @@ all-manifests() {
 
   _sh-manifest ~/git/other/minimal
   _sh-manifest ~/git/other/linuxkit
+
+  src=~/git/alpine/aports
+  _manifest $(basename $src) $src \
+    $(find $src -name APKBUILD -a -printf '%P\n')
 
   src=$ABORIGINAL_DIR
   _manifest aboriginal $src \
@@ -314,6 +320,8 @@ write-manifest() {
 
 # 442K lines without "big" and without ltmain.sh
 # TODO: Include a few ltmain.sh.  Have to de-dupe them.
+#
+# 767K lines with aports (It's 250K lines by itself.)
 
 # 1.30 M lines with "big".
 # 760K lines without ltmain.sh.  Hm need to get up to 1M.
