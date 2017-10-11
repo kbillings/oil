@@ -112,9 +112,19 @@ function showNavLinks(urlHash, period) {
 }
 
 function showListing(entries, filesElem, dirsElem) {
-  var tableHtml = '<tr><td>Hi</td></tr>';
-  filesElem.innerHTML = tableHtml;
-  dirsElem.innerHTML = tableHtml;
+  var dirs = entries.dirs;
+  var dirsHtml = '';
+  for (var name in dirs) {
+    dirsHtml += `<tr><td> <a href="#path=${name}/">${name}/</a> </td></tr>`;
+  }
+  dirsElem.innerHTML = dirsHtml;
+
+  var files = entries.files;
+  var filesHtml = '';
+  for (var name in files) {
+    filesHtml += `<tr><td>${name}</td></tr>`;
+  }
+  filesElem.innerHTML = filesHtml;
 }
 
 // for wild-dir.html
