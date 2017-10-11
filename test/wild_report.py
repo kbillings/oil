@@ -13,6 +13,12 @@ from collections import defaultdict
 import urllib
 import jsontemplate
 
+# TODO:
+# - Measure internal process time
+# - Run it on all files
+#
+# - Delete lots of old code in wild.sh
+
 # JSON Template Evaluation:
 #
 # - {.if}{.or} is confusing
@@ -73,7 +79,6 @@ BODY_STYLE = jsontemplate.Template("""\
 NAV_TEMPLATE = jsontemplate.Template("""\
 {.section nav}
 <div id="nav">
-<code>
 {.repeated section @}
   {.link?}
     <a href="{link|htmltag}">{anchor}</a>
@@ -83,31 +88,12 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 {.alternates with}
   /
 {.end}
-</code>
 </div>
 {.end}
 """, default_formatter='html')
 
 
 PAGE_TEMPLATES = {}
-
-# TODO:
-# - Measure internal process time
-# - Add CSS
-# - Run it on all files
-#
-# - Delete lots of old code in wild.sh
-
-# - DONE Fill in the Nav
-#
-# - DONE Turn failure into boolean, not exit code
-# - DONE On succes: Show links to AST and conversion
-#   - OK OK -- and maybe the filename is all 3 side by side
-
-# - DONE On errors: link to stderr
-#   - DONE Probably want to combine stderr
-#   - DONE move from /raw/ to www.  Could even put them on the listing itself?
-
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     '{rel_path}/',
@@ -116,67 +102,85 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 <table>
   <thead>
     <tr>
-      <td align="right">Files</td>
-      <td align="right">Lines</td>
-      <td align="right">Parse Failures</td>
-      <td align="right">Total Parse Time (secs)</td>
-      <td align="right">Internal Parse Time (secs)</td>
-      <td align="right">Parsed Lines/sec</td>
-      <td align="right">Translation Failures</td>
-      <td>Name</td>
+      <td>Files</td>
+      <td>Lines</td>
+      <td>Parse Failures</td>
+      <td>Total Parse Time (secs)</td>
+      <td>Internal Parse Time (secs)</td>
+      <td>Parsed Lines/sec</td>
+      <td>Translation Failures</td>
+      <td class="name">Directory</td>
     </tr>
   </thead>
   {.repeated section @}
     <tr>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_lines|commas}</td>
-      <td align="right">{parse_failed|commas}</td>
-      <td align="right">{parse_proc_secs}</td>
-      <td align="right">{parse_proc_secs}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{osh2oil_failed|commas}</td>
-      <td><code><a href="{name|htmltag}/listing.html">{name|html}/</a></code></td>
+      <td>{num_files|commas}</td>
+      <td>{num_lines|commas}</td>
+      {.parse_failed?}
+        <td class="fail">{parse_failed|commas}</td>
+      {.or}
+        <td class="ok">{parse_failed|commas}</td>
+      {.end}
+
+      <td>{parse_proc_secs}</td>
+      <td>{parse_proc_secs}</td>
+      <td>{num_files|commas}</td>
+
+      {.osh2oil_failed?}
+        <td class="fail">{osh2oil_failed|commas}</td>
+      {.or}
+        <td class="ok">{osh2oil_failed|commas}</td>
+      {.end}
+
+      <td class="name">
+        <a href="{name|htmltag}/listing.html">{name|html}/</a>
+      </td>
     </tr>
   {.end}
 </table>
 {.end}
 
+<p>
+</p>
+
 {.section files}
 <table>
   <thead>
     <tr>
-      <td align="right">Lines</td>
-      <td align="right">Parse Status</td>
-      <td align="right">Parse Process Time (secs)</td>
-      <td align="right">Internal Parse Time (secs)</td>
-      <td align="right">Parsed Lines/sec</td>
-      <td align="right">Translation Status</td>
-      <td>Name</td>
+      <td>Lines</td>
+      <td>Parsed?</td>
+      <td>Parse Process Time (secs)</td>
+      <td>Internal Parse Time (secs)</td>
+      <td>Parsed Lines/sec</td>
+      <td>Translated?</td>
+      <td class="name">Filename</td>
     </tr>
   </thead>
   {.repeated section @}
     <tr>
-      <td align="right">{num_lines|commas}</td>
-      <td align="right">
+      <td>{num_lines|commas}</td>
+      <td>
         {.section parse_failed}
-          <a href="#stderr_parse_{name}">FAIL</a>
+          <a class="fail" href="#stderr_parse_{name}">FAIL</a>
         {.or}
-          <a href="{name}__ast.html">OK</a>
+          <a class="ok" href="{name}__ast.html">OK</a>
         {.end}
       </td>
-      <td align="right">{parse_proc_secs}</td>
-      <td align="right">{parse_proc_secs}</td>
-      <td align="right">{num_files|commas}</td>
+      <td>{parse_proc_secs}</td>
+      <td>{parse_proc_secs}</td>
+      <td>{num_files|commas}</td>
 
-      <td align="right">
+      <td>
         {# not sure how to use if? }
         {.section osh2oil_failed}
-          <a href="#stderr_osh2oil_{name}">FAIL</a>
+          <a class="fail" href="#stderr_osh2oil_{name}">FAIL</a>
         {.or}
-          <a href="{name}__oil.txt">OK</a>
+          <a class="ok" href="{name}__oil.txt">OK</a>
         {.end}
       </td>
-      <td><code><a href="{name|htmltag}.txt">{name|html}</a></code></td>
+      <td class="name">
+        <a href="{name|htmltag}.txt">{name|html}</a>
+      </td>
     </tr>
   {.end}
 <table>
@@ -189,22 +193,27 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 {.section stderr}
   <h2>stderr</h2>
 
+  <table id="stderr">
+
   {.repeated section @}
-    <p>
-    <a name="stderr_{action}_{name|htmltag}"></a>
-    {.if test parsing}
-      Parsing {name|html}
-    {.or}
-      Translating {name|html}
-    {.end}
-
-    <pre>
-    {contents|html}
-    </pre>
-    </p>
-
-    <hr/>
+    <tr>
+      <td>
+        <a name="stderr_{action}_{name|htmltag}"></a>
+        {.if test parsing}
+          Parsing {name|html}
+        {.or}
+          Translating {name|html}
+        {.end}
+      </td>
+      <td>
+        <pre>
+        {contents|html}
+        </pre>
+      </td>
+    <tr/>
   {.end}
+
+  </table>
 {.end}
 
 """)
