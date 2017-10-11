@@ -227,7 +227,7 @@ process-file() {
   mkdir -p $(dirname $raw_base)
   mkdir -p $(dirname $www_base)
 
-  log "--- Processing $rel_path"
+  log "--- Processing $proj - $rel_path"
 
   # Count the number of lines.  This creates a tiny file, but we're doing
   # everything involving $abs_path at once so it's in the FS cache.
@@ -261,7 +261,7 @@ print-manifest() {
   #head _tmp/wild/MANIFEST.txt 
   #egrep '^dokku|^wwwoosh|^oil' _tmp/wild/MANIFEST.txt
   #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
-  egrep '^asdf|perf-tools' _tmp/wild/MANIFEST.txt
+  egrep -- '-other|linux' _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {

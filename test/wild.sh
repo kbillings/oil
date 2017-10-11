@@ -165,6 +165,9 @@ all-manifests() {
     $(find $src '(' -name debootstrap -o -name functions ')' -a -printf '%P\n') \
     $(find $src/scripts -type f -a -printf 'scripts/%P\n')
 
+  # Kernel
+  _simple-manifest ~/src/linux-4.8.7
+
   #
   # Cloud Stuff
   #
@@ -241,6 +244,21 @@ all-manifests() {
 
   _simple-manifest ~/git/other/JSON.sh
 
+
+  #
+  # Grab Bag
+  #
+
+  # This overlaps with git too much
+  #src=~/git/other
+  #local depth=3
+  #_manifest git-other $src \
+  #  $(find $src -maxdepth $depth -name '*.sh' -a -printf '%P\n')
+
+  src=~/hg/other
+  _manifest hg-other $src \
+    $(find $src -name '*.sh' -a -printf '%P\n')
+
   #
   # Big
   #
@@ -261,6 +279,11 @@ all-manifests() {
 
   _simple-manifest ~/git/other/exp  # What is this?
 
+  # Something related to WebDriver
+  # Doesn't parse because of extended glob.
+  src=~/git/other/wd
+  _manifest $(basename $src) $src \
+    $(find $src -type f -a  -name wd -a -printf '%P\n')
 }
 
 write-all-manifests() {
@@ -269,46 +292,10 @@ write-all-manifests() {
   wc -l _tmp/wild/MANIFEST.txt
 }
 
-# WOW.  I found another lexical state in Bazel.  How to I handle this?
-# Anything that's not a space?  Yeah I think after
-# () is allowed as a literal
-# [[ "${COMMANDS}" =~ ^$keywords(,$keywords)*$ ]] || usage "$@"
-
-parse-git-other() {
-  local src=~/git/other
-  local depth=3
-  _parse-many \
-    $src \
-    $RESULT_DIR/git-other-parsed \
-    $(find $src -maxdepth $depth -name '*.sh' -a -printf '%P\n')
-}
-
-parse-hg-other() {
-  local src=~/hg/other
-  _parse-many \
-    $src \
-    $RESULT_DIR/hg-other-parsed \
-    $(find $src -name '*.sh' -a -printf '%P\n')
-}
-
-# Doesn't parse because of extended glob.
-parse-wd() {
-  local src=~/git/other/wd
-
-  time _parse-many \
-    $src \
-    $RESULT_DIR/wd \
-    $(find $src -type f -a  -name wd -a -printf '%P\n')
-}
-
 
 #
 # Big projects
 #
-
-parse-linux() {
-  _simple-manifest ~/src/linux-4.8.7
-}
 
 parse-mozilla() {
   _simple-manifest \
