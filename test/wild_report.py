@@ -19,6 +19,7 @@ import jsontemplate
 # I think there is even a bug with {.if}{.else}{.end} -- it accepts it but
 # doesn't do the right thing!
 #   - {.if test} does work though, but it took me awhile to remember that or
+#   - I forgot about {.link?} too
 #   even find it in the source code.  I don't like this separate predicate
 #   language.  Could just be PHP-ish I guess.
 # - Predicates are a little annoying.
@@ -56,13 +57,13 @@ BODY_STYLE = jsontemplate.Template("""\
   </head>
 
   <body>
-    <div id="topbox">
+    <p id="topbox">
 {.template NAV}
-    </div>
+    </p>
 
-    <div id="">
+    <p id="">
 {.template BODY}
-    </div>
+    </p>
   </body>
 
 </html>
@@ -72,19 +73,17 @@ BODY_STYLE = jsontemplate.Template("""\
 NAV_TEMPLATE = jsontemplate.Template("""\
 {.section nav}
 <div id="nav">
+<code>
 {.repeated section @}
   {.link?}
     <a href="{link|htmltag}">{anchor}</a>
   {.or}
-    {.id?}
-      <span id="{id|htmltag}">{anchor}</span>
-    {.or}
-      {anchor}
-    {.end}
+    {anchor}
   {.end}
 {.alternates with}
   /
 {.end}
+</code>
 </div>
 {.end}
 """, default_formatter='html')
@@ -93,17 +92,22 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 PAGE_TEMPLATES = {}
 
 # TODO:
+# - Measure internal process time
+# - Add CSS
+# - Run it on all files
+#
+# - Delete lots of old code in wild.sh
+
+# - DONE Fill in the Nav
+#
 # - DONE Turn failure into boolean, not exit code
 # - DONE On succes: Show links to AST and conversion
 #   - OK OK -- and maybe the filename is all 3 side by side
 
-# - On errors: link to stderr
-#   - Probably want to combine stderr
+# - DONE On errors: link to stderr
+#   - DONE Probably want to combine stderr
 #   - DONE move from /raw/ to www.  Could even put them on the listing itself?
 
-# - Measure internal process time
-# - header and footer CSS
-# - Fill in the Nav
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     '{rel_path}/',
@@ -302,6 +306,21 @@ def WriteJsonFiles(node, out_dir):
     WriteJsonFiles(child, os.path.join(out_dir, name))
 
 
+def _MakeNav(rel_path):
+  assert not rel_path.startswith('/'), rel_path
+  assert not rel_path.endswith('/'), rel_path
+  parts = rel_path.split('/')
+  data = []
+  n = len(parts)
+  for i, p in enumerate(parts):
+    if i == n - 1:
+      link = None  # Current page shouldn't have link
+    else:
+      link = '../' * (n - 1 - i) + 'listing.html'
+    data.append({'anchor': p, 'link': link})
+  return data
+
+
 def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
@@ -325,6 +344,7 @@ def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
         'dirs': dirs,
         'base_url': base_url,
         'stderr': node.stderr,
+        'nav': _MakeNav(rel_path),
     }
 
     for name in node.files:
