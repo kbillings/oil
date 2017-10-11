@@ -182,18 +182,21 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   <i>(empty dir)</i>
 {.end}
 
-<h2>stderr</h2>
+{.section stderr}
+  <h2>stderr</h2>
 
-{.repeated section stderr}
-<p>
-<a name="{anchor|htmltag}"></a>
-<span class="anchor">{anchor|html}</span>
-<pre>
-{contents|html}
-</pre>
-</p>
+  {.repeated section @}
+    <p>
+    <a name="{anchor|htmltag}"></a>
+    <span class="anchor">{anchor|html}</span>
 
-<hr/>
+    <pre>
+    {contents|html}
+    </pre>
+    </p>
+
+    <hr/>
+  {.end}
 {.end}
 
 """)
@@ -216,7 +219,7 @@ class DirNode:
     # show all the non-empty stderr here?
     # __osh2oil.stderr.txt
     # __parse.stderr.txt
-    self.stderr = {}
+    self.stderr = []
 
 
 # Traverse the root object with the relative path
@@ -224,6 +227,7 @@ class DirNode:
 def UpdateNodes(node, path_parts, file_stats):
   first = path_parts[0]
   rest = path_parts[1:]
+
   if rest:
     if first in node.dirs:
       child = node.dirs[first]
@@ -234,14 +238,30 @@ def UpdateNodes(node, path_parts, file_stats):
 
     sums = node.dir_totals[first]
     for name, value in file_stats.iteritems():
-      if name in sums:
-        sums[name] += value
-      else:
-        # NOTE: Could be int or float!!!
-        sums[name] = value
+      # Sum numerical properties, but not strings
+      if isinstance(value, int) or isinstance(value, float):
+        if name in sums:
+          sums[name] += value
+        else:
+          # NOTE: Could be int or float!!!
+          sums[name] = value
 
     UpdateNodes(child, rest, file_stats)
   else:
+    # Include stderr if non-empty, or if FAILED
+    parse_stderr = file_stats.pop('parse_stderr')
+    if parse_stderr or file_stats['parse_failed']:
+      node.stderr.append({
+          'anchor': 'err_parse_%s' % first,
+          'contents': parse_stderr,
+      })
+    osh2oil_stderr = file_stats.pop('osh2oil_stderr')
+    if osh2oil_stderr or file_stats['osh2oil_failed']:
+      node.stderr.append({
+          'anchor': 'err_osh2oil_%s' % first,
+          'contents': osh2oil_stderr,
+      })
+
     # Attach to this dir
     node.files[first] = file_stats
 
@@ -296,8 +316,7 @@ def WriteHtmlFiles(node, out_dir, rel_path='ROOT', base_url=''):
         'files': files,
         'dirs': dirs,
         'base_url': base_url,
-        # TODO: derive from DirNode.stderr
-        'stderr': [{'anchor': '#foo', 'contents': 'error'}],
+        'stderr': node.stderr,
     }
 
     for name in node.files:
@@ -346,16 +365,24 @@ def main(argv):
       raw_base = os.path.join('_tmp/wild/raw', proj, rel_path)
       st = {}
 
-      # TODO: Open stderr too to get internal time?
-      # Also what about exit code 2?  Translate to num_failed?
+      # TODO:
+      # - Open stderr to get internal time
+      # - Open stderr only for the ones that failed?  Then put them literally
+      #   'osh2oil_stderr'
 
       parse_task_path = raw_base + '__parse.task.txt'
       st['parse_failed'], st['parse_proc_secs'] = _ReadTaskFile(
           parse_task_path)
+
+      with open(raw_base + '__parse.stderr.txt') as f:
+        st['parse_stderr'] = f.read()
       
       osh2oil_task_path = raw_base + '__osh2oil.task.txt'
       st['osh2oil_failed'], st['osh2oil_proc_secs'] = _ReadTaskFile(
           osh2oil_task_path)
+
+      with open(raw_base + '__osh2oil.stderr.txt') as f:
+        st['osh2oil_stderr'] = f.read()
 
       wc_path = raw_base + '__wc.txt'
       with open(wc_path) as f:
