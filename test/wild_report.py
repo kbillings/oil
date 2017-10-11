@@ -102,8 +102,8 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td align="right">Files</td>
       <td align="right">Lines</td>
       <td align="right">Parse Failures</td>
-      <td align="right">Total Parse Time</td>
-      <td align="right">Parsed Lines Per Second</td>
+      <td align="right">Total Parse Time (secs)</td>
+      <td align="right">Parsed Lines/sec</td>
       <td align="right">Translation Failures</td>
       <td>Name</td>
     </tr>
@@ -111,12 +111,12 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   {.repeated section @}
     <tr>
       <td align="right">{num_files|commas}</td>
+      <td align="right">{num_lines|commas}</td>
+      <td align="right">{parse_status|commas}</td>
       <td align="right">{num_files|commas}</td>
       <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td><a href="{name|htmltag}/listing.html">{name|html}/</a></td>
+      <td align="right">{osh2oil_status|commas}</td>
+      <td><code><a href="{name|htmltag}/listing.html">{name|html}/</a></code></td>
     </tr>
   {.end}
 </table>
@@ -128,20 +128,22 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     <tr>
       <td align="right">Lines</td>
       <td align="right">Parse Status</td>
-      <td align="right">Parse Process Time</td>
-      <td align="right">Internal Parse Time</td>
+      <td align="right">Parse Process Time (secs)</td>
+      <td align="right">Internal Parse Time (secs)</td>
+      <td align="right">Parsed Lines/sec</td>
       <td align="right">Translation Status</td>
       <td>Name</td>
     </tr>
   </thead>
   {.repeated section @}
     <tr>
+      <td align="right">{num_lines|commas}</td>
+      <td align="right">{parse_status|commas}</td>
+      <td align="right">{parse_proc_secs}</td>
+      <td align="right">{parse_proc_secs}</td>
       <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td align="right">{num_files|commas}</td>
-      <td><a href="{name|htmltag}">{name|html}</a></td>
+      <td align="right">{osh2oil_status|commas}</td>
+      <td><code><a href="{name|htmltag}">{name|html}</a></code></td>
     </tr>
   {.end}
 <table>
