@@ -291,8 +291,12 @@ _all-parallel() {
   html-summary
 }
 
+wild-report() {
+  PYTHONPATH=~/hg/json-template/python test/wild_report.py "$@";
+}
+
 make-report() {
-  print-manifest | test/wild_report.py summarize-dirs
+  print-manifest | wild-report summarize-dirs
 
   # NOTE: ajax.js is a copy of oilshell.org/analytics
 

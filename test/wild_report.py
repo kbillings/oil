@@ -10,6 +10,145 @@ import os
 import sys
 from collections import defaultdict
 
+import urllib
+import jsontemplate
+
+T = jsontemplate.Template
+
+F = {
+    'commas': lambda n: '{:,}'.format(n),
+    # NOTE: matches urlesc in handlers/lists.py
+    'urlesc': urllib.quote_plus,
+    }
+
+def MakeHtmlGroup(title_str, body_str):
+  """Make a group of templates that we can expand with a common style."""
+  return {
+      'TITLE': T(title_str, default_formatter='html', more_formatters=F),
+      'BODY': T(body_str, default_formatter='html', more_formatters=F),
+      'NAV': NAV_TEMPLATE,
+  }
+
+BODY_STYLE = jsontemplate.Template("""\
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{.template TITLE}</title>
+
+    <script src="/static/ui.js" type="text/javascript"></script>
+    {.section pygments_css}
+      <link rel="stylesheet" type="text/css" href="/static/pyg-default.css" />
+    {.end}
+    <link rel="stylesheet" type="text/css" href="/static/ui.css" />
+  </head>
+
+  <body>
+    <div id="topbox">
+{.template NAV}
+    </div>
+
+    <div id="{main_div_id}">
+{.template SEARCH_BOX}
+{.template BODY}
+    </div>
+{.template GOOGLE_ANALYTICS}
+  </body>
+
+</html>
+""", default_formatter='html')
+
+# NOTE: {.link} {.or id?} {.or} {.end} doesn't work?  That is annoying.
+NAV_TEMPLATE = jsontemplate.Template("""\
+{.section nav}
+<div id="nav">
+{.repeated section @}
+  {.link?}
+    <a href="{link|htmltag}">{anchor}</a>
+  {.or}
+    {.id?}
+      <span id="{id|htmltag}">{anchor}</span>
+    {.or}
+      {anchor}
+    {.end}
+  {.end}
+{.alternates with}
+  /
+{.end}
+</div>
+{.end}
+""", default_formatter='html')
+
+
+PAGE_TEMPLATES = {}
+
+PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
+    '{dir_name}/ in {src_name}',
+"""\
+{.section dirs}
+<table>
+  <thead>
+    <tr>
+      <td align="right">Files</td>
+      <td>Name</td>
+    </tr>
+  </thead>
+  {.repeated section @}
+    <tr>
+      <td align="right">{leaf_count|commas}</td>
+      <td><a href="{name|htmltag}/">{name|html}/</a></td>
+    </tr>
+  {.end}
+</table>
+{.end}
+
+{.section files}
+<table>
+  <thead>
+    <tr>
+      <td align="right">Bytes</td>
+      <td>Name</td>
+    </tr>
+  </thead>
+  {.repeated section @}
+    <tr>
+      <td align="right">{bytes|commas}</td>
+      <td><a href="{name|htmltag}">{name|html}</a></td>
+    </tr>
+  {.end}
+<table>
+{.end}
+
+{.section symlinks}
+<table>
+  <thead>
+    <tr>
+      <td>Name</td>
+      <td></td>
+      <td>Target</td>
+    </tr>
+  </thead>
+  {.repeated section @}
+    <tr>
+      <td>{name}</td>
+      <td>&rarr;</td> {# right arrow}
+      <td>{target}</td>
+    </tr>
+  {.end}
+</table>
+{.end}
+
+{.if test empty}
+  <i>(empty dir)</i>
+{.end}
+
+{.section dir_text}
+<hr/>
+<pre>
+{@}
+</pre>
+{.end}
+""")
+
 
 def log(msg, *args):
   if msg:
@@ -75,10 +214,6 @@ def WriteJsonFiles(node, out_dir):
     d = {'files': node.files, 'dirs': node.dir_totals}
     json.dump(d, f)
 
-    for name in node.files:
-      pass
-    for name in node.dir_totals:
-      pass
 
   log('Wrote %s', path)
 
@@ -87,9 +222,16 @@ def WriteJsonFiles(node, out_dir):
 
 
 def WriteHtmlFiles(node, out_dir):
-  path = os.path.join(out_dir, 'index.html')
+  path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
-    pass
+    data = {'files': node.files, 'dirs': node.dir_totals}
+    for name in node.files:
+      pass
+    for name in node.dir_totals:
+      pass
+    group = PAGE_TEMPLATES['LISTING']
+    body = BODY_STYLE.expand(data, group=group)
+    f.write(body)
 
 
 FILES_HEADER = (
