@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 """
 wild_report.py
 """
@@ -410,8 +411,6 @@ def main(argv):
 
       # TODO:
       # - Open stderr to get internal time
-      # - Open stderr only for the ones that failed?  Then put them literally
-      #   'osh2oil_stderr'
 
       parse_task_path = raw_base + '__parse.task.txt'
       st['parse_failed'], st['parse_proc_secs'] = _ReadTaskFile(
@@ -433,17 +432,14 @@ def main(argv):
       st['num_files'] = 1
 
       path_parts = [proj] + rel_path.split('/')
-      print path_parts
+      #print path_parts
       UpdateNodes(root_node, path_parts, st)
 
     # Debug print
-    PrintNodes(root_node)
-    WriteJsonFiles(root_node, '_tmp/wild/www')
-    WriteHtmlFiles(root_node, '_tmp/wild/www')
+    #PrintNodes(root_node)
+    #WriteJsonFiles(root_node, '_tmp/wild/www')
 
-    # TODO: Also concat stderr?  Or is that a separate script?
-    # Need to collect files by directory?
-    # Need fragments 
+    WriteHtmlFiles(root_node, '_tmp/wild/www')
 
   else:
     raise RuntimeError('Invalid action %r' % action)
