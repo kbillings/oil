@@ -115,8 +115,8 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   <thead>
     <tr>
       <td>Files</td>
-      <!-- <td>Total Lines</td> -->
-      <td>Lines Parsed</td>
+      <td>Total Lines</td>
+      <!-- <td>Lines Parsed</td> -->
       <td>Parse Failures</td>
       <td>Total Parse Time (secs)</td>
       <td>Internal Parse Time (secs)</td>
@@ -367,7 +367,7 @@ def WriteHtmlFiles(node, out_dir, rel_path='', base_url=''):
       entry = dict(stats)
       entry['name'] = name
       # TODO: This should be internal time
-      lines_per_sec = entry['num_lines'] / entry['parse_proc_secs']
+      lines_per_sec = entry['lines_parsed'] / entry['parse_proc_secs']
       entry['lines_per_sec'] = '%.1f' % lines_per_sec
       dirs.append(entry)
 

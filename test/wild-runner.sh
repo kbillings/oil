@@ -56,7 +56,7 @@ print-manifest() {
   #egrep -- 'mesos' _tmp/wild/MANIFEST.txt
   #cat _tmp/wild/MANIFEST.txt
   #egrep -- '^aports' _tmp/wild/MANIFEST.txt
-  egrep -- '^kubernetes' _tmp/wild/MANIFEST.txt
+  egrep -- '^gherkin' _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {
