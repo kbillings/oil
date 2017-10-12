@@ -115,7 +115,8 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
   <thead>
     <tr>
       <td>Files</td>
-      <td>Lines</td>
+      <!-- <td>Total Lines</td> -->
+      <td>Lines Parsed</td>
       <td>Parse Failures</td>
       <td>Total Parse Time (secs)</td>
       <td>Internal Parse Time (secs)</td>
@@ -129,6 +130,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
     <tr>
       <td>{num_files|commas}</td>
       <td>{num_lines|commas}</td>
+      <!-- <td>{lines_parsed|commas}</td> -->
       {.parse_failed?}
         <td class="fail">{parse_failed|commas}</td>
       {.or}
@@ -355,7 +357,7 @@ def WriteHtmlFiles(node, out_dir, rel_path='', base_url=''):
       entry = dict(stats)
       entry['name'] = name
       # TODO: This should be internal time
-      lines_per_sec = entry['num_lines'] / entry['parse_proc_secs']
+      lines_per_sec = entry['lines_parsed'] / entry['parse_proc_secs']
       entry['lines_per_sec'] = '%.1f' % lines_per_sec
       files.append(entry)
 
@@ -442,6 +444,9 @@ def main(argv):
       wc_path = raw_base + '__wc.txt'
       with open(wc_path) as f:
         st['num_lines'] = int(f.read().split()[0])
+      # For lines per second calculation
+      st['lines_parsed'] = 0 if st['parse_failed'] else st['num_lines']
+
       st['num_files'] = 1
 
       path_parts = [proj] + rel_path.split('/')
