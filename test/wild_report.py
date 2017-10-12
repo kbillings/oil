@@ -15,12 +15,15 @@ import urllib
 import jsontemplate
 
 # TODO:
+
+# - Add table-lib.js so we can sort the results!
+#   - this will identify the 2 failures in Alpine!
+
 # - Measure internal process time
 # - Do not show lines per second on failure!
 # - Show totals for the directory underneath the tables?
 #   - or at least you want a top level dir, above WILD
 
-# - Add table-lib.js so we can sort the results!
 # - Maybe organize it into dirs
 #   - shlib/  # shell libraries
 #   - os/    # kernel and distros
@@ -131,7 +134,6 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       {.or}
         <td class="ok">{parse_failed|commas}</td>
       {.end}
-
       <td>{parse_proc_secs}</td>
       <td>{parse_proc_secs}</td>
       <td>{lines_per_sec}</td>
@@ -174,13 +176,16 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td>
         {.section parse_failed}
           <a class="fail" href="#stderr_parse_{name}">FAIL</a>
+          <td>{parse_proc_secs}</td>
+          <td>-</td>
+          <td>-</td>
         {.or}
           <a class="ok" href="{name}__ast.html">OK</a>
+          <td>{parse_proc_secs}</td>
+          <td>{parse_proc_secs}</td>
+          <td>{lines_per_sec}</td>
         {.end}
       </td>
-      <td>{parse_proc_secs}</td>
-      <td>{parse_proc_secs}</td>
-      <td>{lines_per_sec}</td>
 
       <td>
         {# not sure how to use if? }
@@ -251,9 +256,11 @@ class DirNode:
     self.stderr = []
 
 
-# Traverse the root object with the relative path
-# Update it with rows
 def UpdateNodes(node, path_parts, file_stats):
+  """
+  Create a file node and update the stats of all its descendants in the FS
+  tree.
+  """
   first = path_parts[0]
   rest = path_parts[1:]
 
@@ -300,9 +307,7 @@ def UpdateNodes(node, path_parts, file_stats):
 
 
 def PrintNodes(node, indent=0):
-  """
-  For debugging, print the tree
-  """
+  """Debug print."""
   ind = indent * '    '
   #print('FILES', node.files.keys())
   for name in node.files:
@@ -313,9 +318,7 @@ def PrintNodes(node, indent=0):
 
 
 def WriteJsonFiles(node, out_dir):
-  """
-  Write a listing.json file for every directory.
-  """
+  """Write a listing.json file for every directory."""
   path = os.path.join(out_dir, 'INDEX.json')
   with open(path, 'w') as f:
     d = {'files': node.files, 'dirs': node.dir_totals}
@@ -343,6 +346,7 @@ def _MakeNav(rel_path):
 
 
 def WriteHtmlFiles(node, out_dir, rel_path='', base_url=''):
+  """Write a listing.html file for every directory."""
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
     files = []
