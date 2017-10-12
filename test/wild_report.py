@@ -20,8 +20,6 @@ import jsontemplate
 # - Show totals for the directory underneath the tables?
 #   - or at least you want a top level dir, above WILD
 
-# - DONE link to osh-to-oil.sh instead of the original
-
 # - Add table-lib.js so we can sort the results!
 # - Maybe organize it into dirs
 #   - shlib/  # shell libraries
@@ -107,7 +105,7 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 PAGE_TEMPLATES = {}
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
-    'WILD/{rel_path}/',
+    'WILD/{rel_path}',
 """\
 {.section dirs}
 <table>
