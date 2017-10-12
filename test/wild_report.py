@@ -20,7 +20,6 @@ import jsontemplate
 #   - this will identify the 2 failures in Alpine!
 
 # - Measure internal process time
-# - Do not show lines per second on failure!
 # - Show totals for the directory underneath the tables?
 #   - or at least you want a top level dir, above WILD
 
@@ -335,7 +334,8 @@ def WriteJsonFiles(node, out_dir):
 def _MakeNav(rel_path):
   assert not rel_path.startswith('/'), rel_path
   assert not rel_path.endswith('/'), rel_path
-  parts = ['WILD'] + rel_path.split('/')
+  # Get rid of ['']
+  parts = ['WILD'] + [p for p in rel_path.split('/') if p]
   data = []
   n = len(parts)
   for i, p in enumerate(parts):
