@@ -82,11 +82,16 @@ wild-report() {
   PYTHONPATH=~/hg/json-template/python test/wild_report.py "$@";
 }
 
+_link() {
+  ln -s -f -v "$@"
+}
+
 make-report() {
   print-manifest | wild-report summarize-dirs
 
-  ln -s -f -v \
+  _link \
     $PWD/web/wild.css \
+    $PWD/web/osh-to-oil.{html,js,css} \
     _tmp/wild/www
 }
 

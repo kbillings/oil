@@ -16,11 +16,22 @@ import jsontemplate
 
 # TODO:
 # - Measure internal process time
-# - link to osh-to-oil.sh instead of the original
 # - Do not show lines per second on failure!
+# - Show totals for the directory underneath the tables?
+#   - or at least you want a top level dir, above WILD
+
+# - DONE link to osh-to-oil.sh instead of the original
+
 # - Add table-lib.js so we can sort the results!
-#
-# - DONE Run it on all files
+# - Maybe organize it into dirs
+#   - shlib/  # shell libraries
+#   - os/    # kernel and distros
+#   - langs/
+#   - esoteric/
+#   - cloud/
+#   - google/
+#   - scripts/  # misc scripts
+#   - other/
 
 # JSON Template Evaluation:
 #
@@ -63,18 +74,13 @@ BODY_STYLE = jsontemplate.Template("""\
   <head>
     <title>{.template TITLE}</title>
 
-    <script src="{base_url}wild.js" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="{base_url}wild.css" />
   </head>
 
   <body>
-    <p id="topbox">
 {.template NAV}
-    </p>
 
-    <p id="">
 {.template BODY}
-    </p>
   </body>
 
 </html>
@@ -101,7 +107,7 @@ NAV_TEMPLATE = jsontemplate.Template("""\
 PAGE_TEMPLATES = {}
 
 PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
-    '{rel_path}/',
+    'WILD/{rel_path}/',
 """\
 {.section dirs}
 <table>
@@ -117,6 +123,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td class="name">Directory</td>
     </tr>
   </thead>
+  <tbody>
   {.repeated section @}
     <tr>
       <td>{num_files|commas}</td>
@@ -142,6 +149,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       </td>
     </tr>
   {.end}
+  </tbody>
 </table>
 {.end}
 
@@ -161,6 +169,7 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
       <td class="name">Filename</td>
     </tr>
   </thead>
+  <tbody>
   {.repeated section @}
     <tr>
       <td>{num_lines|commas}</td>
@@ -184,11 +193,12 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
         {.end}
       </td>
       <td class="name">
-        <a href="{name|htmltag}.txt">{name|html}</a>
+        <a href="{base_url}osh-to-oil.html#{rel_path|htmltag}/{name|htmltag}">{name|html}</a>
       </td>
     </tr>
   {.end}
-<table>
+  </tbody>
+</table>
 {.end}
 
 {.if test empty}
@@ -220,7 +230,6 @@ PAGE_TEMPLATES['LISTING'] = MakeHtmlGroup(
 
   </table>
 {.end}
-
 """)
 
 
@@ -323,7 +332,7 @@ def WriteJsonFiles(node, out_dir):
 def _MakeNav(rel_path):
   assert not rel_path.startswith('/'), rel_path
   assert not rel_path.endswith('/'), rel_path
-  parts = rel_path.split('/')
+  parts = ['WILD'] + rel_path.split('/')
   data = []
   n = len(parts)
   for i, p in enumerate(parts):
@@ -335,7 +344,7 @@ def _MakeNav(rel_path):
   return data
 
 
-def WriteHtmlFiles(node, out_dir, rel_path='WILD', base_url=''):
+def WriteHtmlFiles(node, out_dir, rel_path='', base_url=''):
   path = os.path.join(out_dir, 'listing.html')
   with open(path, 'w') as f:
     files = []
