@@ -337,6 +337,10 @@ count-lines() {
     #grep -v ltmain.sh |
 }
 
+all() {
+  test/wild-runner.sh all-parallel "$@"
+}
+
 #
 # Find Biggest Shell Scripts in Aboriginal Source Tarballs
 #

@@ -55,7 +55,8 @@ print-manifest() {
   #head -n $NUM_TASKS _tmp/wild/MANIFEST.txt
   #egrep -- 'mesos' _tmp/wild/MANIFEST.txt
   #cat _tmp/wild/MANIFEST.txt
-  egrep -- '^aports' _tmp/wild/MANIFEST.txt
+  #egrep -- '^aports' _tmp/wild/MANIFEST.txt
+  egrep -- '^bazel' _tmp/wild/MANIFEST.txt
 }
 
 parse-all() {
