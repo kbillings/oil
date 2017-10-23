@@ -175,7 +175,8 @@ _banner() {
   echo -----
 }
 
-# Do everything from a clean git checkout
+# Do everything from a clean git checkout.
+# Similar to scripts/release.sh build-and-test.
 auto() {
   test/spec.sh install-shells
 
@@ -186,6 +187,9 @@ auto() {
 
   _banner 'OSH dev build'
   bin/osh -c 'echo OSH dev build'
+
+  build/prepare.sh configure
+  build/prepare.sh build-python
 
   make _bin/oil.ovm
   _banner 'OSH production build'
