@@ -192,7 +192,11 @@ auto() {
   build/prepare.sh build-python
 
   make _bin/oil.ovm
+  # This does what 'install' does.
+  scripts/run.sh make-bin-links
+
   _banner 'OSH production build'
+
   _bin/osh -c 'echo OSH production build'
 
   run  # make observations
