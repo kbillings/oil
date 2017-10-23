@@ -50,7 +50,7 @@ sh-one() {
 }
 
 import-files() {
-  grep -v '^#' benchmarks/osh-parser-files.txt |
+  grep -v '^#' benchmarks/osh-parser-originals.txt |
     xargs --verbose -I {} -- cp {} benchmarks/testdata
 }
 
