@@ -96,6 +96,7 @@ run() {
   time cat $sorted | xargs -n 1 $0 osh-parse-one
 
   cat $TIMES_CSV
+  echo $TIMES_CSV
 }
 
 summarize() {
@@ -166,6 +167,33 @@ report() {
   local out=$BASE_DIR/www/summary.html
   _print-report > $out
   echo "Wrote $out"
+}
+
+_banner() {
+  echo -----
+  echo "$@"
+  echo -----
+}
+
+# Do everything from a clean git checkout
+auto() {
+  test/spec.sh install-shells
+
+  # Technically we need build-essential too?
+  sudo apt install python-dev
+
+  build/dev.sh pylibc
+
+  _banner 'OSH dev build'
+  bin/osh -c 'echo OSH dev build'
+
+  make _bin/oil.ovm
+  _banner 'OSH production build'
+  _bin/osh -c 'echo OSH production build'
+
+  run  # make observations
+
+  # Then summarize report can be done on a central machine?
 }
 
 # TODO:
