@@ -182,7 +182,7 @@ auto() {
   # Technically we need build-essential too?
   sudo apt install python-dev
 
-  build/dev.sh pylibc
+  build/dev.sh all
 
   _banner 'OSH dev build'
   bin/osh -c 'echo OSH dev build'
