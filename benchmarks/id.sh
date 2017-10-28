@@ -95,7 +95,7 @@ publish-shell-id() {
 # - kernel upgrade
 # - distro upgrade
 
-# How about ~/git/oilshell/benchmark-data/env-id/lisa-$HASH
+# How about ~/git/oilshell/benchmark-data/platform-id/lisa-$HASH
 # How to calculate the hash though?
 
 dump-if-exists() {
@@ -105,8 +105,8 @@ dump-if-exists() {
   cat $path > $out
 }
 
-dump-env-id() {
-  local out_dir=${1:-_tmp/env-id/$(hostname)}
+dump-platform-id() {
+  local out_dir=${1:-_tmp/platform-id/$(hostname)}
 
   mkdir -p $out_dir
 
@@ -136,7 +136,7 @@ dump-env-id() {
 # http://wiki.osdev.org/Target_Triplet
 # It's not exactly the same as what we need here, but close.
 
-_env-id-hash() {
+_platform-id-hash() {
   local src=$1
 
   # Don't hash CPU or memory
@@ -150,13 +150,13 @@ _env-id-hash() {
   test -f $src/lsb-release.txt && cat $src/lsb-release.txt
 }
 
-publish-env-id() {
-  local src=$1  # e.g. _tmp/env-id
-  local dest_base=${2:-../benchmark-data/env-id}
+publish-platform-id() {
+  local src=$1  # e.g. _tmp/platform-id
+  local dest_base=${2:-../benchmark-data/platform-id}
 
   local name=$(basename $src)
   local hash
-  hash=$(_env-id-hash $src | md5sum)  # not secure, an identifier
+  hash=$(_platform-id-hash $src | md5sum)  # not secure, an identifier
 
   local dest="$dest_base/$name-${hash:0:8}"
 

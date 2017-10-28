@@ -91,7 +91,7 @@ run() {
   # Header 
   # TODO: code_id, platform_id
 
-  echo 'status,elapsed_secs,shell,path' > $TIMES_CSV
+  echo 'status,elapsed_secs,platform_id,shell_id,path' > $TIMES_CSV
 
   # 20ms for ltmain.sh; 34ms for configure
   cat $sorted | xargs -n 1 $0 sh-one $out bash || true
