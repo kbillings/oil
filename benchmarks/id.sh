@@ -44,6 +44,10 @@ set -o errexit
 # _id/toolchain/
 #
 
+die() {
+  echo "FATAL: $@" 1>&2
+  exit 1
+}
 
 dump-shell-id() {
   local sh=$1  # path to the shell
@@ -54,51 +58,37 @@ dump-shell-id() {
   local out_dir=${2:-_tmp/shell-id/$name}
   mkdir -p $out_dir
 
-  local result
   case $name in
     bash|zsh|osh)
       $sh --version > $out_dir/version.txt
       ;;
     dash|mksh)
       # These don't have version strings!
-      dpkg -s $name | egrep '^Package|Version' > $out_dir/dpkg-version.txt
+      dpkg -s $name | egrep '^Package|Version' > $out_dir/version.txt
+      ;;
+    *)
+      die "Invalid shell '$name'"
       ;;
   esac
-  #echo $result
 }
 
 publish-shell-id() {
   local src=$1  # e.g. _tmp/shell-id/osh
   local dest_base=${2:-../benchmark-data/shell-id}
-}
 
-# - code: We will run against different shells (bash, dash, OSH).  The OSH
-# code will improve over time
-# - env: we test it on different machines (machine architecture, OS, distro,
-# etc.)
-# - data ID: (name, num_lines) is sufficient I think.  Don't bother with hash.
-#   - or does (name, hash) make sense?
+  local name=$(basename $src)
+  local hash
+  hash=$(md5sum $src/version.txt)  # not secure, an identifier
 
-# TODO:
-# - add code_id to CSV (time.py), and code-id.txt?
+  local dest="$dest_base/$name-${hash:0:8}"
 
-code-id() {
-  # columns for osh:
-  # vm,compiler
+  mkdir -p $dest
+  cp --no-target-directory --recursive $src/ $dest/
 
-  # columns for other:
-  # --version
+  echo $hash > $dest/HASH.txt
 
-  # osh --version?
-  # git branch, etc.?
-
-  # running system python, or OVM?
-  echo TODO
-}
-
-# Just hash the files?
-data-id() {
-  echo TODO
+  echo $dest
+  ls -l $dest
 }
 
 # Events that will change the env for a given machine:
@@ -165,7 +155,8 @@ publish-env-id() {
   local dest_base=${2:-../benchmark-data/env-id}
 
   local name=$(basename $src)
-  local hash=$(_env-id-hash $src | md5sum)  # not secure, an identifier
+  local hash
+  hash=$(_env-id-hash $src | md5sum)  # not secure, an identifier
 
   local dest="$dest_base/$name-${hash:0:8}"
 
