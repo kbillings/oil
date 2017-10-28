@@ -16,23 +16,13 @@ readonly SORTED=$BASE_DIR/input/sorted.txt
 readonly TIMES_CSV=$BASE_DIR/raw/times.csv
 readonly LINES_CSV=$BASE_DIR/raw/line-counts.csv
 
-# NOTE --ast-format none eliminates print time!  That is more than half of it!
-# ( 60 seconds with serialization, 29 seconds without.)
+# NOTE --ast-format none eliminates print time!  That is more than
+# half of it!  ( 60 seconds with serialization, 29 seconds without.)
+# TODO: That is the only difference... hm.
 #
 # TODO:
 # - Have OSH --parse-and-dump-path
 #   - it can dump /proc/self/meminfo
-
-osh-parse-one() {
-  local append_out=$1
-  local path=$2
-  echo "--- $path ---"
-
-  benchmarks/time.py \
-    --output $append_out \
-    --field osh --field "$path" -- \
-    bin/osh -n --ast-format none $path
-}
 
 sh-one() {
   local append_out=$1
@@ -42,12 +32,19 @@ sh-one() {
   local path=$5
   echo "--- $sh -n $path ---"
 
+  # Can't use array because of set -u bug!!!  Only fixed in bash
+  # 4.4.
+  extra_args=''
+  if [[ $sh == */osh ]]; then
+    extra_args='--ast-format none'
+  fi
+
   # exit code, time in seconds, platform_id, shell_id, path.  \0
   # would have been nice here!
   benchmarks/time.py \
     --output $append_out \
     --field "$platform_id" --field "$shell_id" --field "$path" -- \
-    $sh -n $path || echo FAILED
+    "$sh" -n $extra_args "$path" || echo FAILED
 }
 
 import-files() {
@@ -93,19 +90,19 @@ run() {
   local tmp_dir=_tmp/platform-id/$(hostname)
   benchmarks/id.sh dump-platform-id $tmp_dir
 
+  local shell_id
   local platform_id
-  platform_id=$(benchmarks/id.sh publish-platform-id $tmp_dir)
 
+  platform_id=$(benchmarks/id.sh publish-platform-id $tmp_dir)
   echo $platform_id
 
-  for sh_path in bash dash mksh zsh; do
+  for sh_path in bash dash mksh zsh bin/osh _bin/osh; do
     # There will be two different OSH
     local name=$(basename $sh_path)
 
     tmp_dir=_tmp/shell-id/$name
     benchmarks/id.sh dump-shell-id $sh_path $tmp_dir
 
-    local shell_id
     shell_id=$(benchmarks/id.sh publish-shell-id $tmp_dir)
 
     echo "ID $shell_id"
@@ -118,30 +115,6 @@ run() {
 
   cat $TIMES_CSV
   echo $TIMES_CSV
-
-  # TODO: Capture the shell ID for the two versions of OSH.
-  return
-
-
-  # Wow dash is a lot faster, 5 ms / 6 ms.  It even gives one syntax error.
-  cat $sorted | xargs -n 1 $0 sh-one $out dash || true
-
-  # mksh is in between: 11 / 23 ms.
-  cat $sorted | xargs -n 1 $0 sh-one $out mksh || true
-
-  # zsh really slow: 45 ms and 124 ms.
-  cat $sorted | xargs -n 1 $0 sh-one $out zsh || true
-
-  # TODO:
-  # - Run OSH under OVM
-  # - Run OSH compiled with OPy
-  # Maybe these are gradual release upgrades?
-
-  return
-
-  # 4 s and 15 s.  So 1000x speedup would be sufficient, not 10,000x!
-  time cat $sorted | xargs -n 1 $0 osh-parse-one $out
-
 }
 
 summarize() {
