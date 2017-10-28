@@ -219,8 +219,18 @@ data-id() {
 # - kernel upgrade
 # - distro upgrade
 
-env-id() {
-  local out_dir=${1:-_tmp/env-id-$(hostname)}
+# How about ~/git/oilshell/benchmark-data/env-id/lisa-$HASH
+# How to calculate the hash though?
+
+dump-if-exists() {
+  local path=$1
+  local out=$2
+  test -f $path || return
+  cat $path > $out
+}
+
+dump-env-id() {
+  local out_dir=${1:-_tmp/env-id/$(hostname)}
 
   mkdir -p $out_dir
 
@@ -236,20 +246,50 @@ env-id() {
     uname --kernel-version
   } > $out_dir/kernel.txt
 
-  cat /proc/cpuinfo > $out_dir/cpuinfo.txt
+  dump-if-exists /etc/lsb-release $out_dir/lsb-release.txt
 
+  cat /proc/cpuinfo > $out_dir/cpuinfo.txt
   # mem info doesn't make a difference?  I guess it's just nice to check that
   # it's not swapping.  But shouldn't be part of the hash.
   cat /proc/meminfo > $out_dir/meminfo.txt
 
-  cat /etc/lsb-release > $out_dir/lsb-release.txt
-  cat /etc/debian_version > $out_dir/debian_version.txt
-
   head $out_dir/*
+}
 
-  # Now should I create a hash from this?
-  # like x86_64__linux__distro?
-  # There is already concept of the triple?
+# There is already concept of the triple?
+# http://wiki.osdev.org/Target_Triplet
+# It's not exactly the same as what we need here, but close.
+
+env-id-hash() {
+  local src=$1
+
+  # Don't hash CPU or memory
+  #cat $src/cpuinfo.txt
+  #cat $src/hostname.txt  # e.g. lisa
+
+  cat $src/machine.txt  # e.g. x86_64 
+  cat $src/kernel.txt
+
+  # OS
+  test -f $src/lsb-release.txt && cat $src/lsb-release.txt
+}
+
+publish-env-id() {
+  local src=$1  # e.g. _tmp/dump-env-id
+  local dest_base=${2:-~/git/oilshell/benchmark-data/env-id}
+
+  local name=$(basename $src)
+  local hash=$(env-id-hash $src | md5sum)  # not secure, an identifier
+
+  local dest="$dest_base/$name-${hash:0:8}"
+
+  mkdir -p $dest
+  cp --no-target-directory --recursive $src/ $dest/
+
+  echo $hash > $dest/HASH.txt
+
+  echo $dest
+  ls -l $dest
 }
 
 _banner() {
