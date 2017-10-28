@@ -9,6 +9,8 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# TODO: The raw files should be published.  In both
+# ~/git/oilshell/benchmarks-data and also in the /release/ hierarchy?
 readonly BASE_DIR=_tmp/osh-parser
 readonly SORTED=$BASE_DIR/input/sorted.txt
 readonly TIMES_CSV=$BASE_DIR/raw/times.csv
@@ -87,6 +89,8 @@ run() {
   local out=$TIMES_CSV
 
   # Header 
+  # TODO: code_id, platform_id
+
   echo 'status,elapsed_secs,shell,path' > $TIMES_CSV
 
   # 20ms for ltmain.sh; 34ms for configure

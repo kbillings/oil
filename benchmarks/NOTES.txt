@@ -25,3 +25,6 @@ dimension: C compiler flags
 - -m32 ?
 
 
+TODO:
+- Should add bytecode compiler version to oil --version
+- What about compiler flags?
