@@ -88,9 +88,19 @@ run() {
   # This file is appended to
   local out=$TIMES_CSV
 
-  # Header 
-  # TODO: code_id, platform_id
+  for sh_path in bash dash mksh zsh _bin/osh bin/osh; do
+    # There will be two different OSH
+    local name=$(basename $sh_path)
 
+    local tmp_dir=_tmp/shell-id/$name
+    benchmarks/id.sh dump-shell-id $sh_path $tmp_dir
+    benchmarks/id.sh publish-shell-id $tmp_dir
+
+    # TODO: Capture the shell ID for the two versions of OSH.
+  done
+  return
+
+  # Header 
   echo 'status,elapsed_secs,platform_id,shell_id,path' > $TIMES_CSV
 
   # 20ms for ltmain.sh; 34ms for configure
