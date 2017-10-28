@@ -75,6 +75,8 @@ write-sorted-manifest() {
   cat $csv
 }
 
+# runtime_id, platform_id, toolchain_id (which sometimes you don't know)
+
 run() {
   mkdir -p $BASE_DIR/{input,raw,stage1,www}
 

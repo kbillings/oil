@@ -1,7 +1,7 @@
 OSH 0.2 comparisons
 -------------------
 
-dimension: shell
+dimension: shell runtime
 - osh vs. bash vs. dash etc.
 
 dimension: Python runtime (including toolchain flags, which is -O3)  

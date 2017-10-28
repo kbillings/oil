@@ -5,9 +5,13 @@
 # Usage:
 #   ./id.sh <function name>
 
-# Generic MOdel: Code, Data, Env
+# Generic Model: Code, Data, Env
 #
 # Specific model: Runtime, Toolchain, Platform
+#
+# Or I think
+# oil --version needs to show the runtime
+# 
 
 set -o nounset
 set -o pipefail
@@ -23,6 +27,23 @@ set -o errexit
 # What happens when zsh is silently upgraded?
 # I guess before every benchmark, you have to run the ID collection.  Man
 # that is a lot of code.
+#
+# Should I make symlinks to the published location?
+#
+# Maybe bash/dash/mksh/zsh should be invoked through a symlink?
+# Every symlink is a shell runtime version, and it has an associated
+# toolchain?
+
+# Platform is ambient?
+# _id/platform/current is a symlink?
+# _id/runtime/
+#   bash-$HASH/
+#   osh-$HASH/   # osh-cpython, osh-ovm?   osh-opy-ovm?  Too many dimensions.
+#                # the other shells don't have this?
+#   zsh-$HASH/
+# _id/toolchain/
+#
+
 
 shell-code-ids() {
   # copy version-text?
