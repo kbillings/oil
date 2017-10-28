@@ -16,6 +16,11 @@ readonly SORTED=$BASE_DIR/input/sorted.txt
 readonly TIMES_CSV=$BASE_DIR/raw/times.csv
 readonly LINES_CSV=$BASE_DIR/raw/line-counts.csv
 
+import-files() {
+  grep -v '^#' benchmarks/osh-parser-originals.txt |
+    xargs --verbose -I {} -- cp {} benchmarks/testdata
+}
+
 # NOTE --ast-format none eliminates print time!  That is more than
 # half of it!  ( 60 seconds with serialization, 29 seconds without.)
 # TODO: That is the only difference... hm.
@@ -30,7 +35,7 @@ sh-one() {
   local platform_id=$3
   local shell_id=$4
   local path=$5
-  echo "--- $sh -n $path ---"
+  echo "--- $sh $path ---"
 
   # Can't use array because of set -u bug!!!  Only fixed in bash
   # 4.4.
@@ -45,11 +50,6 @@ sh-one() {
     --output $append_out \
     --field "$platform_id" --field "$shell_id" --field "$path" -- \
     "$sh" -n $extra_args "$path" || echo FAILED
-}
-
-import-files() {
-  grep -v '^#' benchmarks/osh-parser-originals.txt |
-    xargs --verbose -I {} -- cp {} benchmarks/testdata
 }
 
 write-sorted-manifest() {
