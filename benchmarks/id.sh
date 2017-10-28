@@ -45,9 +45,31 @@ set -o errexit
 #
 
 
-shell-code-ids() {
-  # copy version-text?
-  echo TODO
+dump-shell-id() {
+  local sh=$1  # path to the shell
+
+  local name
+  name=$(basename $sh)
+
+  local out_dir=${2:-_tmp/shell-id/$name}
+  mkdir -p $out_dir
+
+  local result
+  case $name in
+    bash|zsh|osh)
+      $sh --version > $out_dir/version.txt
+      ;;
+    dash|mksh)
+      # These don't have version strings!
+      dpkg -s $name | egrep '^Package|Version' > $out_dir/dpkg-version.txt
+      ;;
+  esac
+  #echo $result
+}
+
+publish-shell-id() {
+  local src=$1  # e.g. _tmp/shell-id/osh
+  local dest_base=${2:-../benchmark-data/shell-id}
 }
 
 # - code: We will run against different shells (bash, dash, OSH).  The OSH
@@ -139,8 +161,8 @@ _env-id-hash() {
 }
 
 publish-env-id() {
-  local src=$1  # e.g. _tmp/dump-env-id
-  local dest_base=${2:-~/git/oilshell/benchmark-data/env-id}
+  local src=$1  # e.g. _tmp/env-id
+  local dest_base=${2:-../benchmark-data/env-id}
 
   local name=$(basename $src)
   local hash=$(_env-id-hash $src | md5sum)  # not secure, an identifier
