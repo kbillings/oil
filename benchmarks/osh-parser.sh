@@ -103,6 +103,7 @@ run() {
   # - Run OSH under OVM
   # - Run OSH compiled with OPy
   # Maybe these are gradual release upgrades?
+
   return
 
   # 4 s and 15 s.  So 1000x speedup would be sufficient, not 10,000x!
@@ -180,116 +181,6 @@ report() {
   local out=$BASE_DIR/www/summary.html
   _print-report > $out
   echo "Wrote $out"
-}
-
-#
-# Record Provenance: Code, Data, Env
-#
-
-# - code: We will run against different shells (bash, dash, OSH).  The OSH
-# code will improve over time
-# - env: we test it on different machines (machine architecture, OS, distro,
-# etc.)
-# - data ID: (name, num_lines) is sufficient I think.  Don't bother with hash.
-#   - or does (name, hash) make sense?
-
-# TODO:
-# - add code_id to CSV (time.py), and code-id.txt?
-
-code-id() {
-  # columns for osh:
-  # vm,compiler
-
-  # columns for other:
-  # --version
-
-  # osh --version?
-  # git branch, etc.?
-
-  # running system python, or OVM?
-  echo TODO
-}
-
-# Just hash the files?
-data-id() {
-  echo TODO
-}
-
-# Events that will change the env for a given machine:
-# - kernel upgrade
-# - distro upgrade
-
-# How about ~/git/oilshell/benchmark-data/env-id/lisa-$HASH
-# How to calculate the hash though?
-
-dump-if-exists() {
-  local path=$1
-  local out=$2
-  test -f $path || return
-  cat $path > $out
-}
-
-dump-env-id() {
-  local out_dir=${1:-_tmp/env-id/$(hostname)}
-
-  mkdir -p $out_dir
-
-  hostname > $out_dir/hostname.txt
-
-  # does it make sense to do individual fields like -m?
-  # avoid parsing?
-  # We care about the kernel and the CPU architecture.
-  # There is a lot of redundant information there.
-  uname -m > $out_dir/machine.txt
-  # machine
-  { uname --kernel-release 
-    uname --kernel-version
-  } > $out_dir/kernel.txt
-
-  dump-if-exists /etc/lsb-release $out_dir/lsb-release.txt
-
-  cat /proc/cpuinfo > $out_dir/cpuinfo.txt
-  # mem info doesn't make a difference?  I guess it's just nice to check that
-  # it's not swapping.  But shouldn't be part of the hash.
-  cat /proc/meminfo > $out_dir/meminfo.txt
-
-  head $out_dir/*
-}
-
-# There is already concept of the triple?
-# http://wiki.osdev.org/Target_Triplet
-# It's not exactly the same as what we need here, but close.
-
-env-id-hash() {
-  local src=$1
-
-  # Don't hash CPU or memory
-  #cat $src/cpuinfo.txt
-  #cat $src/hostname.txt  # e.g. lisa
-
-  cat $src/machine.txt  # e.g. x86_64 
-  cat $src/kernel.txt
-
-  # OS
-  test -f $src/lsb-release.txt && cat $src/lsb-release.txt
-}
-
-publish-env-id() {
-  local src=$1  # e.g. _tmp/dump-env-id
-  local dest_base=${2:-~/git/oilshell/benchmark-data/env-id}
-
-  local name=$(basename $src)
-  local hash=$(env-id-hash $src | md5sum)  # not secure, an identifier
-
-  local dest="$dest_base/$name-${hash:0:8}"
-
-  mkdir -p $dest
-  cp --no-target-directory --recursive $src/ $dest/
-
-  echo $hash > $dest/HASH.txt
-
-  echo $dest
-  ls -l $dest
 }
 
 _banner() {
