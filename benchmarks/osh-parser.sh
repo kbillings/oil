@@ -94,7 +94,10 @@ run() {
 
     local tmp_dir=_tmp/shell-id/$name
     benchmarks/id.sh dump-shell-id $sh_path $tmp_dir
-    benchmarks/id.sh publish-shell-id $tmp_dir
+
+    local shell_id
+    shell_id=$(benchmarks/id.sh publish-shell-id $tmp_dir)
+    echo ID $shell_id
 
     # TODO: Capture the shell ID for the two versions of OSH.
   done

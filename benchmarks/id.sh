@@ -5,14 +5,6 @@
 # Usage:
 #   ./id.sh <function name>
 
-# Generic Model: Code, Data, Env
-#
-# Specific model: Runtime, Toolchain, Platform
-#
-# Or I think
-# oil --version needs to show the runtime
-# 
-
 set -o nounset
 set -o pipefail
 set -o errexit
@@ -35,14 +27,28 @@ set -o errexit
 # toolchain?
 
 # Platform is ambient?
-# _id/platform/current is a symlink?
-# _id/runtime/
-#   bash-$HASH/
-#   osh-$HASH/   # osh-cpython, osh-ovm?   osh-opy-ovm?  Too many dimensions.
+# _tmp/
+#   shell-id/
+#     bash/
+#       HASH.txt
+#       version.txt
+#     dash/
+#       HASH.txt
+#       version.txt
+#   platform-id/
+#     lisa/
+#       HASH.txt
+#       cpuinfo.txt
+#       cpuinfo.txt
+
+# ../benchmark-data/
+#   shell-id/
+#     bash-$HASH/
+#     osh-$HASH/   # osh-cpython, osh-ovm?   osh-opy-ovm?  Too many dimensions.
 #                # the other shells don't have this?
-#   zsh-$HASH/
-# _id/toolchain/
-#
+#     zsh-$HASH/
+#   platform-id/
+#     lisa-$HASH/
 
 die() {
   echo "FATAL: $@" 1>&2
@@ -72,6 +78,7 @@ dump-shell-id() {
   esac
 }
 
+# Writes a short ID to stdout.
 publish-shell-id() {
   local src=$1  # e.g. _tmp/shell-id/osh
   local dest_base=${2:-../benchmark-data/shell-id}
@@ -80,15 +87,17 @@ publish-shell-id() {
   local hash
   hash=$(md5sum $src/version.txt)  # not secure, an identifier
 
-  local dest="$dest_base/$name-${hash:0:8}"
+  local id="$name-${hash:0:8}"
+  local dest="$dest_base/$id"
 
   mkdir -p $dest
   cp --no-target-directory --recursive $src/ $dest/
 
   echo $hash > $dest/HASH.txt
 
-  echo $dest
-  ls -l $dest
+  ls -l $dest 1>&2
+
+  echo $id
 }
 
 # Events that will change the env for a given machine:
@@ -150,23 +159,25 @@ _platform-id-hash() {
   test -f $src/lsb-release.txt && cat $src/lsb-release.txt
 }
 
+# Writes a short ID to stdout.
 publish-platform-id() {
-  local src=$1  # e.g. _tmp/platform-id
+  local src=$1  # e.g. _tmp/platform-id/lisa
   local dest_base=${2:-../benchmark-data/platform-id}
 
   local name=$(basename $src)
   local hash
   hash=$(_platform-id-hash $src | md5sum)  # not secure, an identifier
 
-  local dest="$dest_base/$name-${hash:0:8}"
+  local id="$name-${hash:0:8}"
+  local dest="$dest_base/$id"
 
   mkdir -p $dest
   cp --no-target-directory --recursive $src/ $dest/
 
   echo $hash > $dest/HASH.txt
 
-  echo $dest
-  ls -l $dest
+  ls -l $dest 1>&2
+  echo $id
 }
 
 "$@"
