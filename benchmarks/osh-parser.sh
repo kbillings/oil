@@ -37,16 +37,16 @@ osh-parse-one() {
 sh-one() {
   local append_out=$1
   local sh=$2
-  local path=$3
+  local platform_id=$3
+  local shell_id=$4
+  local path=$5
   echo "--- $sh -n $path ---"
 
-  # Since we're running benchmarks serially, just append to the same file.
-  TIMEFORMAT="%R $sh $path"  # elapsed time
-
-  # exit code, time in seconds, sh, path.  \0 would have been nice here!
+  # exit code, time in seconds, platform_id, shell_id, path.  \0
+  # would have been nice here!
   benchmarks/time.py \
     --output $append_out \
-    --field "$sh" --field "$path" -- \
+    --field "$platform_id" --field "$shell_id" --field "$path" -- \
     $sh -n $path || echo FAILED
 }
 
@@ -87,27 +87,41 @@ run() {
 
   # This file is appended to
   local out=$TIMES_CSV
+  # Header 
+  echo 'status,elapsed_secs,platform_id,shell_id,path' > $out
 
-  for sh_path in bash dash mksh zsh _bin/osh bin/osh; do
+  local tmp_dir=_tmp/platform-id/$(hostname)
+  benchmarks/id.sh dump-platform-id $tmp_dir
+
+  local platform_id
+  platform_id=$(benchmarks/id.sh publish-platform-id $tmp_dir)
+
+  echo $platform_id
+
+  for sh_path in bash dash mksh zsh; do
     # There will be two different OSH
     local name=$(basename $sh_path)
 
-    local tmp_dir=_tmp/shell-id/$name
+    tmp_dir=_tmp/shell-id/$name
     benchmarks/id.sh dump-shell-id $sh_path $tmp_dir
 
     local shell_id
     shell_id=$(benchmarks/id.sh publish-shell-id $tmp_dir)
-    echo ID $shell_id
 
-    # TODO: Capture the shell ID for the two versions of OSH.
+    echo "ID $shell_id"
+
+    # 20ms for ltmain.sh; 34ms for configure
+    cat $sorted | xargs -n 1 -- $0 \
+      sh-one $out $sh_path $platform_id $shell_id || true
+
   done
+
+  cat $TIMES_CSV
+  echo $TIMES_CSV
+
+  # TODO: Capture the shell ID for the two versions of OSH.
   return
 
-  # Header 
-  echo 'status,elapsed_secs,platform_id,shell_id,path' > $TIMES_CSV
-
-  # 20ms for ltmain.sh; 34ms for configure
-  cat $sorted | xargs -n 1 $0 sh-one $out bash || true
 
   # Wow dash is a lot faster, 5 ms / 6 ms.  It even gives one syntax error.
   cat $sorted | xargs -n 1 $0 sh-one $out dash || true
@@ -128,8 +142,6 @@ run() {
   # 4 s and 15 s.  So 1000x speedup would be sufficient, not 10,000x!
   time cat $sorted | xargs -n 1 $0 osh-parse-one $out
 
-  cat $TIMES_CSV
-  echo $TIMES_CSV
 }
 
 summarize() {
