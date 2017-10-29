@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Measure how fast the OSH parser is.a
+#
 # Usage:
 #   ./osh-parser.sh <function name>
 
@@ -7,46 +9,47 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# TODO: The raw files should be published.  In both
+# ~/git/oilshell/benchmarks-data and also in the /release/ hierarchy?
 readonly BASE_DIR=_tmp/osh-parser
 readonly SORTED=$BASE_DIR/input/sorted.txt
 readonly TIMES_CSV=$BASE_DIR/raw/times.csv
 readonly LINES_CSV=$BASE_DIR/raw/line-counts.csv
 
-# NOTE --ast-format none eliminates print time!  That is more than half of it!
-# ( 60 seconds with serialization, 29 seconds without.)
-#
-# TODO: Lines per second is about 1700
-# Run each file twice and compare timing?
-
-# TODO: Use the compiled version without our Python, not system Python!
-# Compilation flags are different.
-# - Well maybe we want both.
-
-osh-parse-one() {
-  local path=$1
-  echo "--- $path ---"
-
-  TIMEFORMAT="%R osh $path"  # elapsed time
-
-  benchmarks/time.py \
-    --output $TIMES_CSV \
-    --field osh --field "$path" -- \
-    bin/osh -n --ast-format none $path
+import-files() {
+  grep -v '^#' benchmarks/osh-parser-originals.txt |
+    xargs --verbose -I {} -- cp {} benchmarks/testdata
 }
 
+# NOTE --ast-format none eliminates print time!  That is more than
+# half of it!  ( 60 seconds with serialization, 29 seconds without.)
+# TODO: That is the only difference... hm.
+#
+# TODO:
+# - Have OSH --parse-and-dump-path
+#   - it can dump /proc/self/meminfo
+
 sh-one() {
-  local sh=$1
-  local path=$2
-  echo "--- $sh -n $path ---"
+  local append_out=$1
+  local sh=$2
+  local platform_id=$3
+  local shell_id=$4
+  local path=$5
+  echo "--- $sh $path ---"
 
-  # Since we're running benchmarks serially, just append to the same file.
-  TIMEFORMAT="%R $sh $path"  # elapsed time
+  # Can't use array because of set -u bug!!!  Only fixed in bash
+  # 4.4.
+  extra_args=''
+  if [[ $sh == */osh ]]; then
+    extra_args='--ast-format none'
+  fi
 
-  # exit code, time in seconds, sh, path.  \0 would have been nice here!
+  # exit code, time in seconds, platform_id, shell_id, path.  \0
+  # would have been nice here!
   benchmarks/time.py \
-    --output $TIMES_CSV \
-    --field "$sh" --field "$path" -- \
-    $sh -n $path || echo FAILED
+    --output $append_out \
+    --field "$platform_id" --field "$shell_id" --field "$path" -- \
+    "$sh" -n $extra_args "$path" || echo FAILED
 }
 
 import-files() {
@@ -76,29 +79,44 @@ write-sorted-manifest() {
   cat $csv
 }
 
+# runtime_id, platform_id, toolchain_id (which sometimes you don't know)
+
 run() {
   mkdir -p $BASE_DIR/{input,raw,stage1,www}
 
   write-sorted-manifest
   local sorted=$SORTED
 
+  # This file is appended to
+  local out=$TIMES_CSV
   # Header 
-  echo 'status,elapsed_secs,shell,path' > $TIMES_CSV
+  echo 'status,elapsed_secs,platform_id,shell_id,path' > $out
 
-  # 20ms for ltmain.sh; 34ms for configure
-  cat $sorted | xargs -n 1 $0 sh-one bash || true
+  local tmp_dir=_tmp/platform-id/$(hostname)
+  benchmarks/id.sh dump-platform-id $tmp_dir
 
-  # Wow dash is a lot faster, 5 ms / 6 ms.  It even gives one syntax error.
-  cat $sorted | xargs -n 1 $0 sh-one dash || true
+  local shell_id
+  local platform_id
 
-  # mksh is in between: 11 / 23 ms.
-  cat $sorted | xargs -n 1 $0 sh-one mksh || true
+  platform_id=$(benchmarks/id.sh publish-platform-id $tmp_dir)
+  echo $platform_id
 
-  # zsh really slow: 45 ms and 124 ms.
-  cat $sorted | xargs -n 1 $0 sh-one zsh || true
+  for sh_path in bash dash mksh zsh bin/osh _bin/osh; do
+    # There will be two different OSH
+    local name=$(basename $sh_path)
 
-  # 4 s and 15 s.  So 1000x speedup would be sufficient, not 10,000x!
-  time cat $sorted | xargs -n 1 $0 osh-parse-one
+    tmp_dir=_tmp/shell-id/$name
+    benchmarks/id.sh dump-shell-id $sh_path $tmp_dir
+
+    shell_id=$(benchmarks/id.sh publish-shell-id $tmp_dir)
+
+    echo "ID $shell_id"
+
+    # 20ms for ltmain.sh; 34ms for configure
+    cat $sorted | xargs -n 1 -- $0 \
+      sh-one $out $sh_path $platform_id $shell_id || true
+
+  done
 
   cat $TIMES_CSV
   echo $TIMES_CSV
@@ -180,7 +198,8 @@ _banner() {
   echo -----
 }
 
-# Do everything from a clean git checkout.
+# Run the whole benchmark from a clean git checkout.
+#
 # Similar to scripts/release.sh build-and-test.
 auto() {
   test/spec.sh install-shells
@@ -208,18 +227,6 @@ auto() {
 
   # Then summarize report can be done on a central machine?
 }
-
-# TODO:
-# - Parse the test file -> csv.  Have to get rid of syntax errors?
-#   - I really want --output.  
-#   - benchmarks/time.py is probably appropriate now.
-# - reshape, total, and compute lines/sec
-#   - that is really a job for R
-#   - maybe you need awk to massage wc output into LINES_CSV
-# - csv_to_html.py
-# - Then a shell script here to put CSS and JS around it.
-#   - wild-static
-# - Publish to release/0.2.0/benchmarks/MACHINE/wild/
 
 time-test() {
   benchmarks/time.py \

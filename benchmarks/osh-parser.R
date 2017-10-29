@@ -42,33 +42,33 @@ main = function(argv) {
 
   # Summarize rates
   joined %>%
-    group_by(shell) %>%
+    group_by(shell_id) %>%
     summarize(total_lines = sum(num_lines), total_ms = sum(elapsed_ms)) %>%
     mutate(lines_per_ms = total_lines / total_ms) ->
     rate_summary
 
   # Put OSH last!
-  first = rate_summary %>% filter(shell != 'osh')
-  last = rate_summary %>% filter(shell == 'osh')
-  rate_summary = bind_rows(list(first, last))
+  #first = rate_summary %>% filter(shell != 'osh')
+  #last = rate_summary %>% filter(shell == 'osh')
+  #rate_summary = bind_rows(list(first, last))
   print(rate_summary)
 
   # Elapsed seconds by file and shell
   joined %>%
     select(-c(lines_per_ms)) %>% 
-    spread(key = shell, value = elapsed_ms) %>%
-    arrange(num_lines) %>%
-    select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
+    spread(key = shell_id, value = elapsed_ms) %>%
+    arrange(num_lines) ->
     elapsed
+    #select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
   print(elapsed)
 
   # Rates by file and shell
   joined %>%
     select(-c(elapsed_ms)) %>% 
-    spread(key = shell, value = lines_per_ms) %>%
-    arrange(num_lines) %>%
-    select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
+    spread(key = shell_id, value = lines_per_ms) %>%
+    arrange(num_lines) ->
     rate
+    #select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
   print(rate)
 
   write.csv(elapsed, file.path(out_dir, 'elapsed.csv'), row.names = F)
