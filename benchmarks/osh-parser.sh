@@ -80,6 +80,8 @@ write-sorted-manifest() {
 # runtime_id, platform_id, toolchain_id (which sometimes you don't know)
 
 run() {
+  local preview=${1:-}
+
   local job_id
   job_id="$(hostname).$(date +%Y-%m-%d__%H-%M-%S)"
 
@@ -118,10 +120,11 @@ run() {
 
     echo "ID $shell_id"
 
-    # 20ms for ltmain.sh; 34ms for configure
-    cat $sorted | xargs -n 1 -- $0 \
-      sh-one $out $sh_path $platform_id $shell_id || true
-
+    if ! test -n "$preview"; then
+      # 20ms for ltmain.sh; 34ms for configure
+      cat $sorted | xargs -n 1 -- $0 \
+        sh-one $out $sh_path $platform_id $shell_id || true
+    fi
   done
 
   cat $out

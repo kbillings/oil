@@ -114,8 +114,9 @@ _shell-id-hash() {
   file=$src/dpkg-version.txt
   test -f $file && egrep '^Version' $file
 
+  # Interpreter as CPython vs. OVM is what we care about now.
   file=$src/osh-version.txt
-  test -f $file && egrep -v '^Oil version|^Interpreter' $file
+  test -f $file && egrep '^Oil version|^Interpreter' $file
 
   # For OSH
   file=$src/git-commit-hash.txt
