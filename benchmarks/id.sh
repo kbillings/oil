@@ -64,6 +64,16 @@ dump-shell-id() {
   local out_dir=${2:-_tmp/shell-id/$name}
   mkdir -p $out_dir
 
+  # Add extra repository info for osh.
+  case $sh in
+    bin/osh|_bin/osh)
+      local branch
+      branch=$(git rev-parse --abbrev-ref HEAD)
+      echo $branch > $out_dir/git-branch.txt
+      git rev-parse $branch > $out_dir/git-commit-hash.txt
+      ;;
+  esac
+
   case $name in
     bash|zsh|osh)
       $sh --version > $out_dir/version.txt
@@ -85,7 +95,7 @@ publish-shell-id() {
 
   local name=$(basename $src)
   local hash
-  hash=$(md5sum $src/version.txt)  # not secure, an identifier
+  hash=$(cat $src/version.txt | md5sum)  # not secure, an identifier
 
   local id="$name-${hash:0:8}"
   local dest="$dest_base/$id"
