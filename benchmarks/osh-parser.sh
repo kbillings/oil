@@ -12,9 +12,7 @@ set -o errexit
 # TODO: The raw files should be published.  In both
 # ~/git/oilshell/benchmarks-data and also in the /release/ hierarchy?
 readonly BASE_DIR=_tmp/osh-parser
-readonly SORTED=$BASE_DIR/input/sorted.txt
-readonly TIMES_CSV=$BASE_DIR/raw/times.csv
-readonly LINES_CSV=$BASE_DIR/raw/line-counts.csv
+readonly SORTED=$BASE_DIR/tmp/sorted.txt
 
 import-files() {
   grep -v '^#' benchmarks/osh-parser-originals.txt |
@@ -55,7 +53,7 @@ sh-one() {
 write-sorted-manifest() {
   local files=${1:-benchmarks/osh-parser-files.txt}
   local counts=$BASE_DIR/raw/line-counts.txt
-  local csv=$LINES_CSV
+  local csv=$2
 
   # Remove comments and sort by line count
   grep -v '^#' $files | xargs wc -l | sort -n > $counts
@@ -77,14 +75,21 @@ write-sorted-manifest() {
 # runtime_id, platform_id, toolchain_id (which sometimes you don't know)
 
 run() {
-  mkdir -p $BASE_DIR/{input,raw,stage1,www}
+  local job_id
+  job_id="$(hostname).$(date +%Y-%m-%d__%H-%M-%S)"
 
-  write-sorted-manifest
+  local out_dir='../benchmark-data/osh-parser/'
+  local out="$out_dir/$job_id.times.csv"
+  local lines_out="$out_dir/$job_id.lines.csv"
+
+  mkdir -p \
+    $(dirname $out) \
+    $BASE_DIR/{tmp,raw,stage1,www}
+
+  write-sorted-manifest '' $lines_out
   local sorted=$SORTED
 
-  # This file is appended to
-  local out=$TIMES_CSV
-  # Header 
+  # Write Header of the CSV file that is appended to.
   echo 'status,elapsed_secs,platform_id,shell_id,path' > $out
 
   local tmp_dir=_tmp/platform-id/$(hostname)
@@ -96,6 +101,7 @@ run() {
   platform_id=$(benchmarks/id.sh publish-platform-id $tmp_dir)
   echo $platform_id
 
+  #for sh_path in bash dash mksh zsh; do
   for sh_path in bash dash mksh zsh bin/osh _bin/osh; do
     # There will be two different OSH
     local name=$(basename $sh_path)
@@ -113,8 +119,8 @@ run() {
 
   done
 
-  cat $TIMES_CSV
-  echo $TIMES_CSV
+  cat $out
+  echo "Wrote $out"
 }
 
 summarize() {
