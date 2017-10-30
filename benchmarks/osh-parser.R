@@ -1,11 +1,14 @@
 #!/usr/bin/Rscript
 #
-# osh-parser.R
+# osh-parser.R -- Analyze output from shell scripts.
 #
-# Analyze output from shell scripts.
+# Usage:
+#   osh-parser.R OUT_DIR [TIMES_CSV...]
 
 library(dplyr)
 library(tidyr)
+
+options(stringsAsFactors = F)
 
 Log = function(fmt, ...) {
   cat(sprintf(fmt, ...))
@@ -13,29 +16,12 @@ Log = function(fmt, ...) {
 }
 
 main = function(argv) {
-  # TODO: join multiple?
-  # Or have pairs?
-  # Should we join pairs first?
-  # How to extract the Interpreter: OVM?  for OSH only
-  # assert that the number of lines are the same or what?
-
-  # TODO:
-  # shell_name, shell_id (version and build tools)
-  # host_name, host_id (kernel and distro and so forth)
-  #
-  # and then infer "shell" and "host" from these
-  # osh-ovm and osh-host-cpython
-
-  # usage:
-  # out_dir, TIMES... and then "lines.csv" is automatcailly joined?
-  #
-
-
   out_dir = argv[[1]]
 
   hosts = list()
   for (i in 2:length(argv)) {
     times_path = argv[[i]]
+    # Find it in the same directory
     lines_path = gsub('.times.', '.lines.', times_path, fixed = T)
 
     Log('times: %s', times_path)
@@ -62,6 +48,15 @@ main = function(argv) {
   all_times = bind_rows(hosts)
   print(all_times)
 
+  # Summarize rates
+  all_times %>%
+    group_by(shell_id, platform_id) %>%
+    summarize(total_lines = sum(num_lines), total_ms = sum(elapsed_ms)) %>%
+    mutate(lines_per_ms = total_lines / total_ms) ->
+    rate_summary
+
+  print(rate_summary)
+
   # status, elapsed, shell, path
   #times = read.csv(argv[[2]])
   return()
@@ -84,13 +79,6 @@ main = function(argv) {
     select(-c(elapsed_secs)) ->
     joined
   #print(joined)
-
-  # Summarize rates
-  joined %>%
-    group_by(shell_id) %>%
-    summarize(total_lines = sum(num_lines), total_ms = sum(elapsed_ms)) %>%
-    mutate(lines_per_ms = total_lines / total_ms) ->
-    rate_summary
 
   # Put OSH last!
   #first = rate_summary %>% filter(shell != 'osh')
