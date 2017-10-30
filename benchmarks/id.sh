@@ -55,6 +55,17 @@ die() {
   exit 1
 }
 
+_dump-if-exists() {
+  local path=$1
+  local out=$2
+  test -f $path || return
+  cat $path > $out
+}
+
+#
+# Shell ID
+#
+
 dump-shell-id() {
   local sh=$1  # path to the shell
 
@@ -75,17 +86,42 @@ dump-shell-id() {
   esac
 
   case $name in
-    bash|zsh|osh)
+    bash|zsh)
       $sh --version > $out_dir/version.txt
+      ;;
+    osh)
+      $sh --version > $out_dir/osh-version.txt
       ;;
     dash|mksh)
       # These don't have version strings!
-      dpkg -s $name | egrep '^Package|Version' > $out_dir/version.txt
+      dpkg -s $name > $out_dir/dpkg-version.txt
       ;;
     *)
       die "Invalid shell '$name'"
       ;;
   esac
+}
+
+_shell-id-hash() {
+  local src=$1
+
+  local file
+
+  file=$src/version.txt
+  test -f $file && cat $file
+
+  # Only hash the dimensions we want to keep
+  file=$src/dpkg-version.txt
+  test -f $file && egrep '^Version' $file
+
+  file=$src/osh-version.txt
+  test -f $file && egrep -v '^Oil version|^Interpreter' $file
+
+  # For OSH
+  file=$src/git-commit-hash.txt
+  test -f $file && cat $file
+
+  return 0
 }
 
 # Writes a short ID to stdout.
@@ -95,7 +131,10 @@ publish-shell-id() {
 
   local name=$(basename $src)
   local hash
-  hash=$(cat $src/version.txt | md5sum)  # not secure, an identifier
+
+  # Problem: OSH is built on each machine.  Get rid of the release date?
+  # And use the commit hash or what?
+  hash=$(_shell-id-hash $src | md5sum)  # not secure, an identifier
 
   local id="$name-${hash:0:8}"
   local dest="$dest_base/$id"
@@ -110,19 +149,16 @@ publish-shell-id() {
   echo $id
 }
 
+#
+# Platform ID
+#
+
 # Events that will change the env for a given machine:
 # - kernel upgrade
 # - distro upgrade
 
 # How about ~/git/oilshell/benchmark-data/platform-id/lisa-$HASH
 # How to calculate the hash though?
-
-dump-if-exists() {
-  local path=$1
-  local out=$2
-  test -f $path || return
-  cat $path > $out
-}
 
 dump-platform-id() {
   local out_dir=${1:-_tmp/platform-id/$(hostname)}
@@ -141,7 +177,7 @@ dump-platform-id() {
     uname --kernel-version
   } > $out_dir/kernel.txt
 
-  dump-if-exists /etc/lsb-release $out_dir/lsb-release.txt
+  _dump-if-exists /etc/lsb-release $out_dir/lsb-release.txt
 
   cat /proc/cpuinfo > $out_dir/cpuinfo.txt
   # mem info doesn't make a difference?  I guess it's just nice to check that
@@ -166,7 +202,10 @@ _platform-id-hash() {
   cat $src/kernel.txt
 
   # OS
-  test -f $src/lsb-release.txt && cat $src/lsb-release.txt
+  local file=$src/lsb-release.txt
+  test -f $file && cat $file
+
+  return 0
 }
 
 # Writes a short ID to stdout.
