@@ -38,6 +38,7 @@ sh-one() {
   # Can't use array because of set -u bug!!!  Only fixed in bash
   # 4.4.
   extra_args=''
+
   if [[ $sh == */osh ]]; then
     extra_args='--ast-format none'
   fi
@@ -119,6 +120,9 @@ run() {
     shell_id=$(benchmarks/id.sh publish-shell-id $tmp_dir)
 
     echo "ID $shell_id"
+
+    # TODO: Shell ID should be separate columns?
+    # It's really shell_version_id?
 
     if ! test -n "$preview"; then
       # 20ms for ltmain.sh; 34ms for configure
