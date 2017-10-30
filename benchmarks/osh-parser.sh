@@ -171,6 +171,13 @@ _print-report() {
     elapsed time measurements, but long files are chosen to minimize its
     effect.</p>
 
+    <h3>Summary</h3>
+
+    <table id="rate-summary">
+EOF
+  web/table/csv_to_html.py < $BASE_DIR/stage1/rate_summary.csv
+  cat <<EOF
+
     <h3>Elasped Time by File and Shell (milliseconds)</h3>
 
     <table id="elapsed">
@@ -187,12 +194,6 @@ EOF
   cat <<EOF
     </table>
 
-    <h3>Summary</h3>
-
-    <table id="rate-summary">
-EOF
-  web/table/csv_to_html.py < $BASE_DIR/stage1/rate_summary.csv
-  cat <<EOF
     </table>
   </body>
 </html>
