@@ -48,7 +48,7 @@ main = function(argv) {
   all_times = bind_rows(hosts)
   print(all_times)
 
-  # Summarize rates
+  # Summarize rates by platform/shell
   all_times %>%
     group_by(shell_id, platform_id) %>%
     summarize(total_lines = sum(num_lines), total_ms = sum(elapsed_ms)) %>%
@@ -57,56 +57,34 @@ main = function(argv) {
 
   print(rate_summary)
 
-  # status, elapsed, shell, path
-  #times = read.csv(argv[[2]])
-  return()
-
-  # TODO:
-  # - compute lines per second for every cell?
-
-  #print(lines)
-  #print(times)
-
-  # Remove failures
-  times %>% filter(status == 0) %>% select(-c(status)) -> times
-
-  # Add the number of lines, joining on path, and compute lines/sec
-  # TODO: Is there a better way compute lines_per_ms and then drop lines_per_sec?
-  times %>%
-    left_join(lines, by = c('path')) %>%
-    mutate(elapsed_ms = elapsed_secs * 1000,
-           lines_per_ms = num_lines / elapsed_ms) %>%
-    select(-c(elapsed_secs)) ->
-    joined
-  #print(joined)
-
-  # Put OSH last!
-  #first = rate_summary %>% filter(shell != 'osh')
-  #last = rate_summary %>% filter(shell == 'osh')
-  #rate_summary = bind_rows(list(first, last))
-  print(rate_summary)
-
-  # Elapsed seconds by file and shell
-  joined %>%
+  # Elapsed seconds for each shell by platform and file
+  all_times %>%
     select(-c(lines_per_ms)) %>% 
     spread(key = shell_id, value = elapsed_ms) %>%
-    arrange(num_lines) ->
+    arrange(platform_id, num_lines) ->
     elapsed
     #select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
+
+  Log('\n')
+  Log('ELAPSED')
   print(elapsed)
 
   # Rates by file and shell
-  joined %>%
+  all_times  %>%
     select(-c(elapsed_ms)) %>% 
     spread(key = shell_id, value = lines_per_ms) %>%
-    arrange(num_lines) ->
+    arrange(platform_id, num_lines) ->
     rate
     #select(c(bash, dash, mksh, zsh, osh, num_lines, path)) ->
+
+  Log('\n')
+  Log('RATE')
   print(rate)
 
+  write.csv(rate_summary,
+            file.path(out_dir, 'rate_summary.csv'), row.names = F)
   write.csv(elapsed, file.path(out_dir, 'elapsed.csv'), row.names = F)
   write.csv(rate, file.path(out_dir, 'rate.csv'), row.names = F)
-  write.csv(rate_summary, file.path(out_dir, 'rate_summary.csv'), row.names = F)
 
   Log('Wrote %s', out_dir)
 
