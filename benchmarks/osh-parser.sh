@@ -138,7 +138,7 @@ run() {
 summarize() {
   local out=_tmp/osh-parser/stage1
   mkdir -p $out
-  benchmarks/osh-parser.R $LINES_CSV $TIMES_CSV $out
+  benchmarks/osh-parser.R $out ../benchmark-data/osh-parser/*.times.csv
 
   tree $BASE_DIR
 }
